@@ -221,3 +221,5 @@ redis/
 minio/
 # Result
 results/
+# Lock file
+*.lock
