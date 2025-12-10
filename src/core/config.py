@@ -19,7 +19,7 @@ class Settings(BaseSettings):
     MYSQL_PORT: int = 3306
     MYSQL_USERNAME: str
     MYSQL_PASSWORD: str
-    MYSQL_DB: str = "robot"
+    MYSQL_DB: str = "RobotNSK"
     # REDIS
     REDIS_PASSWORD: str = ""
     REDIS_HOST: str = "127.0.0.1"
