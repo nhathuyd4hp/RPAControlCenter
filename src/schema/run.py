@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import datetime
 from typing import Optional
 
 from pydantic import BaseModel
@@ -15,8 +15,8 @@ class ScheduleInput(BaseModel):
     minute: int | None = None
     day_of_week: str | None = None
     # Schedule control
-    start_date: Optional[date] = None
-    end_date: Optional[date] = None
+    start_date: Optional[datetime] = None
+    end_date: Optional[datetime] = None
 
 
 class RunSchedule(BaseModel):

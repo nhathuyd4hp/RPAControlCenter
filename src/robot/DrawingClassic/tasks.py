@@ -45,7 +45,7 @@ def drawing_classic():
             orders = orders[orders["確未"] == "未"]
             orders = orders[["案件番号", "得意先名", "物件名", "確定納期", "担当2", "資料リンク"]]
             orders["Result"] = pd.NA
-            orders = orders.head(1)
+            orders = orders.head(5)
             # ---- #
             for index, row in orders.iterrows():
                 _, _, 物件名, 確定納期, 担当2, 資料リンク, _ = row

@@ -223,3 +223,4 @@ minio/
 results/
 # Lock file
 *.lock
+*.xlsx
