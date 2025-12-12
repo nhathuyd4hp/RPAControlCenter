@@ -23,7 +23,7 @@ async def subscriber(channel:str):
     p = r.pubsub()
     await p.subscribe(channel)
     async for message in p.listen():
-        await manager.broadcast(message["data"])
+        await manager.broadcast(message["data"],channel)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
