@@ -179,7 +179,7 @@ class SharePoint:
                         break
                 self.page.locator("button[data-automationid='uploadCommand']").click()
                 time.sleep(0.5)
-            # self.page.locator("input[type='file']").set_input_files(files)
+            self.page.locator("input[type='file']").set_input_files(files)
             time.sleep(1)
             while True:
                 if windows := findwindows.find_windows(title="Open"):
