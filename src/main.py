@@ -1,29 +1,31 @@
 import asyncio
 from contextlib import asynccontextmanager, suppress
 
-import redis.asyncio as redis
 from apscheduler.triggers.cron import CronTrigger
 from fastapi import BackgroundTasks, FastAPI, HTTPException, Request, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from sqlmodel import Session
-from src.core.redis import Async_Redis_POOL
+
+import redis.asyncio as redis
 from src.api.common.response import SuccessResponse
 from src.api.middleware import GlobalExceptionMiddleware
 from src.api.router import api
 from src.core.config import settings
+from src.core.redis import Async_Redis_POOL
 from src.scheduler import scheduler
 from src.service import ResultService, ScheduleService
 from src.socket import manager
 from src.worker import Worker
 
 
-async def subscriber(channel:str):
+async def subscriber(channel: str):
     r = redis.Redis(connection_pool=Async_Redis_POOL)
     p = r.pubsub()
     await p.subscribe(channel)
     async for message in p.listen():
-        await manager.broadcast(message["data"],channel)
+        await manager.broadcast(message["data"], channel)
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -72,8 +74,8 @@ app.add_middleware(
 app.include_router(api, prefix=settings.ROOT_PATH)
 
 
-@app.websocket("/notification")
-async def websocket_endpoint(websocket: WebSocket):
+@app.websocket("/ws")
+async def websocket_global(websocket: WebSocket):
     await manager.connect(websocket)
     try:
         while True:
@@ -81,9 +83,10 @@ async def websocket_endpoint(websocket: WebSocket):
     except WebSocketDisconnect:
         manager.disconnect(websocket)
 
+
 @app.websocket("/channel/{channel}")
-async def websocket_endpoint(websocket: WebSocket, channel: str):
-    await manager.connect(websocket,channel)
+async def websocket_channel(websocket: WebSocket, channel: str | None = None):
+    await manager.connect(websocket, channel)
     try:
         while True:
             await websocket.receive_text()

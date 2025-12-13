@@ -1,20 +1,24 @@
 import json
-import redis
 import logging
 
+import redis
+
+
 class RedisHandler(logging.Handler):
-    def __init__(self, redisClient:redis.Redis, channel: str):
+    def __init__(self, redisClient: redis.Redis, channel: str):
         super().__init__()
         self.client = redisClient
         self.channel = channel
-    def emit(self, record:logging.LogRecord):
+
+    def emit(self, record: logging.LogRecord):
         message = self.format(record)
         data = {
-            "task_id":self.channel,
-            "message":message,
+            "task_id": self.channel,
+            "message": message,
         }
-        self.client.publish("LOG",json.dumps(data))
-        
+        self.client.publish("LOG", json.dumps(data))
+
+
 class Log:
     _initialized = False
     _loggers = {}
@@ -24,9 +28,7 @@ class Log:
         if cls._initialized:
             return
 
-        cls.formatter = logging.Formatter(
-            "%(asctime)s | %(levelname)s | %(name)s | %(message)s"
-        )
+        cls.formatter = logging.Formatter("%(asctime)s | %(levelname)s | %(name)s | %(message)s")
 
         cls._initialized = True
 
@@ -43,7 +45,7 @@ class Log:
         logger.addHandler(handler)
         cls._loggers[channel] = logger
         return logger
-    
+
     @classmethod
     def delete_logger(cls, channel: str):
         logger = cls._loggers.pop(channel, None)

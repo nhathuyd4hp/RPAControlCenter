@@ -1,15 +1,16 @@
-import redis
 import io
 import re
 import tempfile
-from src.core.redis import REDIS_POOL
 from datetime import datetime
-from src.core.logger import Log
+
 import pandas as pd
 from celery import shared_task
 from playwright.sync_api import sync_playwright
 
+import redis
 from src.core.config import settings
+from src.core.logger import Log
+from src.core.redis import REDIS_POOL
 from src.robot.GuiBanVeToei.automation import MailDealer, SharePoint, WebAccess
 from src.service import ResultService as minio
 
@@ -21,10 +22,7 @@ def gui_ban_ve_toei(
     to_date: datetime,
 ):
     TaskID = self.request.id
-    logger = Log.get_logger(
-        channel=TaskID,
-        redis_client=redis.Redis(connection_pool=REDIS_POOL)
-    )
+    logger = Log.get_logger(channel=TaskID, redis_client=redis.Redis(connection_pool=REDIS_POOL))
     """
     Robot Name: Gửi bản vẽ Toei
     1. Download Data

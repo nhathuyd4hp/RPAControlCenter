@@ -1,10 +1,12 @@
-import redis
 from celery import signals
 from sqlmodel import Session, select
-from src.core.redis import REDIS_POOL
+
+import redis
 from src.core.config import settings
+from src.core.redis import REDIS_POOL
 from src.model import Runs
 from src.model.runs import Status
+
 
 @signals.task_prerun.connect
 def task_prerun_handler(sender=None, task_id=None, **kwargs):
