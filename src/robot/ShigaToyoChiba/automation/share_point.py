@@ -1,8 +1,9 @@
+import time
 import os
 import re
 from typing import List
 from urllib.parse import urlparse
-
+from pywinauto import Application, findwindows
 from playwright._impl._errors import TimeoutError
 from playwright.sync_api import Browser, BrowserContext, Playwright
 
@@ -170,7 +171,28 @@ class SharePoint:
                 ).wait_for(
                     state="visible",
                 )
-            pass
+            while True:
+                if self.page.locator("button[data-automationid='uploadCommand']").get_attribute("aria-expanded") == 'true':
+                    self.page.locator("button[data-automationid='uploadFileCommand']").click()
+                    time.sleep(0.5)
+                    if self.page.locator("input[type='file']").count() == 1:
+                        break
+                self.page.locator("button[data-automationid='uploadCommand']").click()
+                time.sleep(0.5)
+            # self.page.locator("input[type='file']").set_input_files(files)
+            time.sleep(1)
+            while True:
+                if windows := findwindows.find_windows(title="Open"):
+                    for window in windows:
+                        app = Application().connect(handle=window)
+                        dlg = app.window(handle=window)
+                        dlg.child_window(title="Cancel", class_name="Button").click()
+                    if findwindows.find_windows(title_re="Open"):
+                        continue
+                    else:
+                        break
+                time.sleep(0.25)
+            return True
         except TimeoutError:
             return self.upload(url, files, steps)
 
