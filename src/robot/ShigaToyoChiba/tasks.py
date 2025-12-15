@@ -1,4 +1,5 @@
 import tempfile
+import unicodedata
 import os
 import re
 import shutil
@@ -148,7 +149,7 @@ def shiga_toyo_chiba(self,process_date: datetime | str):
             DataShigaUp_DriveID = item.get("parentReference").get("driveId")
             DataShigaUp_SiteID = item.get("parentReference").get("siteId")
         # ---- Upload Data
-        # suffix_name = f"{process_date.strftime("%m-%d")}納材"
+        suffix_name = f"{process_date.strftime("%m-%d")}納材"
         with sync_playwright() as p:
             browser = p.chromium.launch(headless=False, args=["--start-maximized"])
             context = browser.new_context(no_viewport=True)
@@ -312,8 +313,14 @@ def shiga_toyo_chiba(self,process_date: datetime | str):
                             )
                             break
                         logger.info("Check filename")
+                        isError: bool = False
                         # --- Kiểm tra tên file --- #
-                        if any(row["物件名"] not in os.path.basename(download) for download in downloads):
+                        for downloaded in downloads:
+                            downloaded_file = unicodedata.normalize("NFKC", downloaded)
+                            if not any(part in downloaded_file for part in re.split(r'[ \u3000・\u2018]+', unicodedata.normalize("NFKC", breadcrumb[-1]))):
+                                isError = True
+                                break
+                        if isError:
                             APIClient.write(
                                 siteId=DataShigaUp_SiteID,
                                 driveId=DataShigaUp_DriveID,
@@ -434,6 +441,10 @@ def shiga_toyo_chiba(self,process_date: datetime | str):
                                 data=[["Lỗi: kiểm tra cột 出荷工場"]],
                             )
                             break
+                        sp.rename_breadcrumb(
+                            url = url,
+                            new_name = f"{breadcrumb[-1]} {suffix_name}" 
+                        )
                         APIClient.write(
                             siteId=DataShigaUp_SiteID,
                             driveId=DataShigaUp_DriveID,

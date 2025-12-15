@@ -180,7 +180,7 @@ class SharePoint:
                 self.page.locator("button[data-automationid='uploadCommand']").click()
                 time.sleep(0.5)
             self.page.locator("input[type='file']").set_input_files(files)
-            time.sleep(1)
+            time.sleep(2.5)
             while True:
                 if windows := findwindows.find_windows(title="Open"):
                     for window in windows:
@@ -207,3 +207,24 @@ class SharePoint:
             ]
         except TimeoutError:
             return self.get_breadcrumb(url)
+        
+    def rename_breadcrumb(self,url:str,new_name:str) -> bool:
+        try:
+            self.page.bring_to_front()
+            self.page.goto(url)
+            self.page.locator("i[name='OpenPane']").click()
+            self.page.frame_locator("iframe[data-automationid='infoPane']").locator("button",has_text="Edit all").click()
+            self.page.frame_locator("iframe[data-automationid='infoPane']").locator("input[type='text']").fill(new_name)
+            self.page.frame_locator("iframe[data-automationid='infoPane']").locator(
+                "button[data-automationid='ReactClientFormSaveButton']",
+                has=self.page.frame_locator("iframe[data-automationid='infoPane']").locator(
+                    "span",
+                    has_text="Save",
+                )
+            ).click()
+            time.sleep(5)
+            return True
+        except TimeoutError:
+            return self.rename_breadcrumb(url,new_name)
+
+
