@@ -1,3 +1,4 @@
+import re
 import time
 
 from playwright._impl._errors import TimeoutError
@@ -91,6 +92,41 @@ class PowerApp:
             time.sleep(2 / 3)
             if self.page.frame_locator("iframe[class='player-app-frame']").locator("div[role='listitem']").count() != 1:
                 return False
-            return False
+            content = (
+                self.page.frame_locator("iframe[class='player-app-frame']")
+                .locator("div[role='listitem']")
+                .text_content()
+                .replace("\n", " ")
+                .strip()
+            )
+            if process_date in content and build in content:
+                while True:
+                    if (
+                        "UP済"
+                        in self.page.frame_locator("iframe[class='player-app-frame']")
+                        .locator("div[role='listitem']")
+                        .text_content()
+                        .replace("\n", " ")
+                        .strip()
+                    ):
+                        return True
+                    self.page.frame_locator("iframe[class='player-app-frame']").locator(
+                        "div[role='listitem'] div[id^='react-combobox-view']:visible"
+                    ).click()
+                    self.page.frame_locator("iframe[class='player-app-frame']").locator(
+                        "span:visible", has_text=re.compile("^UP済$")
+                    ).click()
+                    self.page.frame_locator("iframe[class='player-app-frame']").locator(
+                        "div:visible", has_text=re.compile("^YES$")
+                    ).click()
+                    time.sleep(1)
+            else:
+                return False
         except TimeoutError:
+            try:
+                self.page.frame_locator("iframe[class='player-app-frame']").locator(
+                    "div:visible", has_text=re.compile("^NO$")
+                ).click(timeout=5000)
+            except TimeoutError:
+                pass
             return self.up(process_date, factory, build)
