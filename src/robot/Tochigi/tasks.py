@@ -1,4 +1,5 @@
 import os
+import re
 import shutil
 import tempfile
 import threading
@@ -292,24 +293,13 @@ def tochigi(self, process_date: datetime | str):
                             time.sleep(0.5)
                         break
                     while True:
-                        # Check Data
-                        site_name = api.get_site_from_url(資料リンク)
-                        drives = api.get_drives(site_name)
-                        drive_id = None
-                        for drive in drives:
-                            if drive.get("name") == "ドキュメント" and breadcrumb[0] == "Documents":
-                                drive_id = drive.get("id")
-                                break
-                            if drive.get("name") == breadcrumb[0]:
-                                drive_id = drive.get("id")
-                                break
-                        path = f"{"/".join(breadcrumb[1:])}/★データ"
                         if os.path.exists(os.path.abspath(f"downloads/{案件番号}")):
                             shutil.rmtree(os.path.abspath(f"downloads/{案件番号}"))
-                        downloads = api.download_drive(
-                            drive_id=drive_id,
-                            breadcrumb=path,
-                            save_to=os.path.join(temp_dir, str(int(案件番号))),
+                        downloads = sp.download(
+                            url=資料リンク,
+                            file=re.compile(r".*\.(xls|xlsx|xlsm|xlsb|xml|xlt|xltx|xltm|xlam|pdf)$", re.IGNORECASE),
+                            steps=[re.compile("^★データ$")],
+                            save_to=temp_dir,
                         )
                         counts: list[str] = [filepath for _, filepath, _ in downloads]
                         floors: int = 2 if 階 == "-" else len(階.split(","))
