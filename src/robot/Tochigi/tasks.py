@@ -301,7 +301,7 @@ def tochigi(self, process_date: datetime | str):
                             steps=[re.compile("^★データ$")],
                             save_to=temp_dir,
                         )
-                        counts: list[str] = [filepath for _, filepath, _ in downloads]
+                        counts: list[str] = [filepath for filepath in downloads]
                         floors: int = 2 if 階 == "-" else len(階.split(","))
                         # ---- Đếm số lượng file #
                         has_pdf = any(f.lower().endswith(".pdf") for f in counts)
@@ -325,7 +325,7 @@ def tochigi(self, process_date: datetime | str):
                         os.makedirs(name=excel_dir, exist_ok=True)
 
                         temp: list[str] = []
-                        for _, filepath, _ in downloads:
+                        for filepath in downloads:
                             filename = os.path.basename(filepath)
                             ext = os.path.splitext(filename)[1].lower()
                             if ext == ".pdf":
