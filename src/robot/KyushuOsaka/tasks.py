@@ -60,7 +60,7 @@ def Fname(path: str):
             break
 
 
-@shared_task(bind=True)
+@shared_task(bind=True, name="Kyushu Osaka")
 def kyushu_osaka(
     self,
     process_date: datetime,

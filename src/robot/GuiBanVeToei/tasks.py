@@ -15,7 +15,7 @@ from src.robot.GuiBanVeToei.automation import MailDealer, SharePoint, WebAccess
 from src.service import ResultService as minio
 
 
-@shared_task(bind=True)
+@shared_task(bind=True, name="Gửi bản vẽ Toei")
 def gui_ban_ve_toei(
     self,
     process_date: datetime,

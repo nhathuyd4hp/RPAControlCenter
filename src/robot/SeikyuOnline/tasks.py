@@ -73,7 +73,10 @@ def get_price(excelPath: str) -> float:
     return 0
 
 
-@shared_task(bind=True)
+@shared_task(
+    bind=True,
+    name="Seikyu Hanwa",
+)
 def seikyu_online(self, sheet_name: API | str = "/api/type/seikyu-online"):
     TaskID = self.request.id
     logger = Log.get_logger(channel=TaskID, redis_client=redis.Redis(connection_pool=REDIS_POOL))

@@ -62,7 +62,7 @@ def Fname(path: str):
             break
 
 
-@shared_task(bind=True)
+@shared_task(bind=True, name="Shiga Toyo Chiba")
 def shiga_toyo_chiba(self, process_date: datetime | str):
     TaskID = self.request.id
     logger = Log.get_logger(channel=TaskID, redis_client=redis.Redis(connection_pool=REDIS_POOL))

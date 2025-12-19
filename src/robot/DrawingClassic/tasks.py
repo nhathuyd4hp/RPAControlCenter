@@ -11,8 +11,11 @@ from src.robot.DrawingClassic.automation import AndPad, SharePoint, WebAccess
 from src.service import ResultService
 
 
-@shared_task
-def gui_ban_ve_xac_nhan_classic():
+@shared_task(
+    bind=True,
+    name="Gửi bản vẽ xác nhận Classic",
+)
+def gui_ban_ve_xac_nhan_classic(self):
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=False, args=["--start-maximized"])
         context = browser.new_context(no_viewport=True)

@@ -1,12 +1,8 @@
 from enum import StrEnum
-from typing import TYPE_CHECKING
 
-from sqlmodel import Column, Field, Relationship, Text
+from sqlmodel import Column, Field, Text
 
 from src.model.base import Base
-
-if TYPE_CHECKING:
-    from src.model.log import Log
 
 
 class Status(StrEnum):
@@ -22,5 +18,3 @@ class Runs(Base, table=True):
     parameters: str | None = Field(default=None)
     status: Status = Field(default=Status.WAITING)
     result: str | None = Field(sa_column=Column(Text))
-
-    logs: list["Log"] = Relationship(back_populates="run")
