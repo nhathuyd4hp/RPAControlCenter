@@ -127,10 +127,10 @@ def seikyu_online(self, sheet_name: API | str = "/api/type/seikyu-online"):
                 if not validators.url(LinkData):
                     continue
                 # Trường hợp đặc biệt
-                if pd.notna(row["J"]) and pd.notna(row["T"]):
-                    continue
-                if pd.notna(row["Z"]):
-                    continue
+                # if pd.notna(row["J"]) and pd.notna(row["T"]):
+                #     continue
+                # if pd.notna(row["Z"]):
+                #     continue
                 logger.info(f"{index} - {row["B"]} - {row["C"]} - {LinkData}")
                 downloads = sp.download(
                     url=LinkData,
