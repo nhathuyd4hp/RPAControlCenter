@@ -96,13 +96,16 @@ def gui_ban_ve_toei(
                     logger.info(row)
                     # Kiểm tra nouki
                     if pd.isna(row["確定納期"]):
+                        logger.warning("Không có nouki")
                         data.at[index, "Result"] = "Không có nouki"
                         continue
                     # Kiểm tra địa chỉ gửi
                     mail_address = wa.mail_address(str(row["案件番号"]))
                     if mail_address is None:
+                        logger.warning("Không tìm thấy mail nhận")
                         data.at[index, "Result"] = "Không tìm thấy mail nhận"
                         continue
+                    logger.info("Tải dữ liệu từ SharePoint")
                     downloads = sp.download(
                         url=row["資料リンク"],
                         steps=[
@@ -112,9 +115,11 @@ def gui_ban_ve_toei(
                         save_to=temp_dir,
                     )
                     if len(downloads) == 0:
+                        logger.warning("Không tìm thấy bản vẽ")
                         data.at[index, "Result"] = "Không tìm thấy bản vẽ"
                         continue
                     if len(downloads) != 1:
+                        logger.warning(f"Có {len(downloads)} file bản vẽ")
                         data.at[index, "Result"] = f"Có {len(downloads)} file bản vẽ"
                         continue
                     logger.info("Gửi mail")
@@ -124,9 +129,11 @@ def gui_ban_ve_toei(
                         nouki=row["確定納期"],
                         file=downloads[0],
                     ):
+                        logger.warning("Gửi mail thất bại")
                         data.at[index, "Result"] = "Gửi mail thất bại"
                         continue
                     if not wa.update_state(case=str(row["案件番号"]), current_state=str(row["図面"])):
+                        logger.warning("Đã gửi mail | Cập nhật WebAccess lỗi")
                         data.at[index, "Result"] = "Đã gửi mail | Cập nhật WebAccess lỗi"
                         continue
                     data.at[index, "Result"] = "Thành công"

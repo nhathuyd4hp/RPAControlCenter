@@ -86,6 +86,7 @@ class WebAccess:
             self.page.locator("input[name='search_builder_name_like']").fill("東栄住宅")
             # Theo ngày
             self.page.locator("input[name='search_fix_deliver_date_from']").fill(process_date)
+            self.page.locator("button", has_text="閉じる").click()
             # Theo trạng thái
             self.page.locator("button[id='search_drawing_type_ms']").click()
             for drawing in ["作図済", "CBUP済"]:
