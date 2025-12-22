@@ -90,9 +90,11 @@ https://www.nsk-cad.com/
 """
                 )
                 popup.locator("div[id='mailBoxAttachBox'] input[type='file']").set_input_files(file)
-                time.sleep(1.5)
+                time.sleep(5 / 3)
                 popup.locator("button", has_text=" 送信確認 ").first.click()
-                time.sleep(1.5)
+                time.sleep(5 / 3)
+                popup.locator("button", has_text="送信 ").first.click()
+                time.sleep(5 / 3)
                 popup.close()
                 return True
         except TimeoutError:
