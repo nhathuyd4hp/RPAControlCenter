@@ -1,5 +1,3 @@
-from typing import TYPE_CHECKING
-
 import redis
 from celery import signals
 from celery.result import AsyncResult
@@ -10,9 +8,6 @@ from src.core.config import settings
 from src.core.redis import REDIS_POOL
 from src.model import Runs
 from src.model.runs import Status
-
-if TYPE_CHECKING:
-    pass
 
 
 @signals.worker_ready.connect
