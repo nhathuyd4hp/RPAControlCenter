@@ -345,7 +345,7 @@ def tochigi(self, process_date: datetime | str):
                                 shutil.move(filepath, new_path)
                                 temp.append(new_path)
                         logger.info("Chạy macro")
-                        with FileLock(os.path.join("src/resource","macro.lock"), timeout=300):
+                        with FileLock(os.path.join("src/resource", "macro.lock"), timeout=300):
                             try:
                                 app = xw.App(visible=False)
                                 wb_macro = app.books.open(macro_file)
@@ -389,7 +389,7 @@ def tochigi(self, process_date: datetime | str):
                         # Upload
                         logger.info("Up data")
                         downloads: list[str] = temp
-                        納品日 = f"{int(month)}月{int(day)}日"
+                        納品日 = f"{int(month):02d}月{int(day):02d}日"
                         while True:
                             up: list[dict] = []
                             for f in os.listdir(pdf_dir):
