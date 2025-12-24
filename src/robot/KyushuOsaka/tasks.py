@@ -378,13 +378,13 @@ def kyushu_osaka(
                     if row["出荷工場"] == "九州":
                         path = [
                             re.compile("^九州工場 製造データー$"),
-                            re.compile(f"{int(process_date.month)}月{int(process_date.day)}日配送分"),
+                            re.compile(rf"^0?{int(process_date.month)}月0?{int(process_date.day)}日配送分$"),
                             re.compile(r"^確定データ\(.+\)$"),
                         ]
                         if not up_trong:
                             path = [
                                 re.compile("^九州工場 製造データー$"),
-                                re.compile(f"{int(process_date.month)}月{int(process_date.day)}日配送分"),
+                                re.compile(rf"^0?{int(process_date.month)}月0?{int(process_date.day)}日配送分$"),
                             ]
                         if not sp.upload(
                             url="https://nskkogyo.sharepoint.com/sites/kyuusyuukouzyou",
@@ -405,7 +405,7 @@ def kyushu_osaka(
                             url="https://nskkogyo.sharepoint.com/sites/yanase/Shared Documents/Forms/AllItems.aspx?id=/sites/yanase/Shared Documents/大阪工場　製造データ",  # noqa: E501
                             files=[f for f in Path(download_path).rglob("*") if f.is_file()],
                             steps=[
-                                re.compile(rf"^{process_date.month:02d}(月|日){process_date.day:02d}日$"),
+                                re.compile(rf"^0?{process_date.month}月0?{process_date.day}日$"),
                                 re.compile(r"^🔹関西工場確定データ🔹"),
                             ],
                         ):
