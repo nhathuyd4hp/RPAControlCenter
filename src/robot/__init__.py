@@ -13,4 +13,5 @@ from src.robot.FuriwakeOsaka import tasks  # noqa
 from src.robot.AndPadShuko import tasks  # noqa
 from src.robot.GuiMailNoukiKakunin import tasks  # noqa
 from src.robot.KEIAIANKENKA import tasks  # noqa
-from src.robot.ToeiNoukihikaku import tasks # noqa
+from src.robot.ToeiNoukihikaku import tasks  # noqa
+from src.robot.TamaAnkenka import tasks  # noqa
