@@ -12,7 +12,7 @@ async def streaming(run_id: str):
     file_path = f"logs/{run_id}.log"
     if not os.path.exists(file_path):
         return
-    async with aiofiles.open(file_path, mode="r", encoding="utf-8") as f:
+    async with aiofiles.open(file_path, mode="r", encoding="cp932") as f:
         while True:
             line = await f.readline()
             if line:

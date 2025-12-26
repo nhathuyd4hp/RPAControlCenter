@@ -182,7 +182,7 @@ def main(self):
 　営業時間：9:00～18:00
 　休日:日曜・祝日
 -----・・・・・----------・・・・・----------・・・・・-----
-""",
+""",  # noqa
                     )
                 if not send_mail:
                     database.at[index, "結果"] = send_mail
