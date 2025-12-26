@@ -1,12 +1,10 @@
 import subprocess
 from pathlib import Path
-
 from celery import shared_task
 
-
-@shared_task(bind=True, name="Keiai Ankenka")
+@shared_task(bind=True,name="Toei Noukihikaku")
 def KEIAI_ANKENKA(self):
-    exe_path = Path(__file__).resolve().parents[2] / "robot" / "KEIAIANKENKA" / "KISTAR_AnkenkaV1.9.exe"
+    exe_path = Path(__file__).resolve().parents[2] / "robot" / "ToeiNoukihikaku" / "touei_noukihikaku_V1_4.exe"
 
     log_dir = Path(__file__).resolve().parents[3] / "logs"
     log_dir.mkdir(parents=True, exist_ok=True)
