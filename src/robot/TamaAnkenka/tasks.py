@@ -3,9 +3,12 @@ from pathlib import Path
 
 from celery import shared_task
 
+from src.core.config import settings
+from src.service import ResultService as minio
+
 
 @shared_task(bind=True, name="Tama Ankenka")
-def KEIAI_ANKENKA(self):
+def Tama_Ankenka(self):
     exe_path = Path(__file__).resolve().parents[2] / "robot" / "TamaAnkenka" / "タマホーム_案件化+資料UP_V1_2.exe"
 
     log_dir = Path(__file__).resolve().parents[3] / "logs"
@@ -18,3 +21,15 @@ def KEIAI_ANKENKA(self):
             [str(exe_path)], cwd=str(exe_path.parent), stdout=f, stderr=subprocess.STDOUT, text=True
         )
         process.wait()
+
+    file_path = exe_path.parent / "案件化.xlsm"
+
+    result = minio.fput_object(
+        bucket_name=settings.MINIO_BUCKET,
+        object_name=f"TamaAnkenka/{self.request.id}/案件化.xlsm",
+        file_path=str(file_path),
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    )
+    file_path.unlink()
+
+    return result.object_name
