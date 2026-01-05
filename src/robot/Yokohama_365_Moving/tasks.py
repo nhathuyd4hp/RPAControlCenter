@@ -1,4 +1,3 @@
-import shutil
 import subprocess
 from pathlib import Path
 
@@ -7,7 +6,9 @@ from celery import shared_task
 
 @shared_task(bind=True, name="Yokohama 365 Moving")
 def Yokohama(self):
-    exe_path = Path(__file__).resolve().parents[2] / "robot" / "Yokohama_365_Moving" / "sharepoint_folder_moving_V1_1.exe"
+    exe_path = (
+        Path(__file__).resolve().parents[2] / "robot" / "Yokohama_365_Moving" / "sharepoint_folder_moving_V1_1.exe"
+    )
     cwd_path = exe_path.parent
 
     log_dir = Path(__file__).resolve().parents[3] / "logs"
