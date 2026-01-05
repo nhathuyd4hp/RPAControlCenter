@@ -158,6 +158,7 @@ def seikyu(
                     quote_url.append(row["見積URL"])
                     prices.append(row["税抜金額"])
                     continue
+                logger.info(row["365URL"])
                 downloads = sp.download(
                     url=row["365URL"],
                     steps=[

@@ -26,7 +26,7 @@ def Tama_Ankenka(self):
 
     result = minio.fput_object(
         bucket_name=settings.MINIO_BUCKET,
-        object_name=f"TamaAnkenka/{self.request.id}/案件化.xlsm",
+        object_name=f"TamaAnkenka/{self.request.id}/{self.request.id}.xlsm",
         file_path=str(file_path),
         content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     )
