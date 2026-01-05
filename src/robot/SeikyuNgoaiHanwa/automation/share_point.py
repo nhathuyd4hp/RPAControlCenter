@@ -107,6 +107,13 @@ class SharePoint:
                 selector="span[role='button'][data-id='heroField']",
                 has_text=file,
             ).first.wait_for(timeout=5000, state="visible")
+            try:
+                self.page.locator(
+                    selector="span[role='button'][data-id='heroField']",
+                    has_text=file,
+                ).first.wait_for(timeout=5000, state="visible")
+            except TimeoutError:
+                pass
             items = self.page.locator(
                 selector="span[role='button'][data-id='heroField']",
                 has_text=file,
