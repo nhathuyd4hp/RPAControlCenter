@@ -164,7 +164,7 @@ def seikyu(
                     steps=[
                         re.compile("^(見積|見積書)$"),
                     ],
-                    file=".*.(xlsx|xlsm|xls)",
+                    file=re.compile(".*.(xlsx|xlsm|xls)"),
                 )
                 if not downloads or len(downloads) > 1:
                     quote_url.append(row["見積URL"])
