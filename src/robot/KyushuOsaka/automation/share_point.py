@@ -38,6 +38,7 @@ class SharePoint:
             ).click()
             time.sleep(1)
             self.page.locator("input[type='password']").fill(self.password)
+            time.sleep(1)
             self.page.locator(
                 selector="input[type='submit']",
                 has_text="Sign in",
