@@ -241,6 +241,7 @@ def shiga_toyo_chiba(
                             continue
                         if pd.isna(row["階"]):
                             # Bài ở dòng này không có số tầng
+                            logger.warning("Lỗi: kiểm tra cột 階")
                             APIClient.write(
                                 siteId=DataShigaUp_SiteID,
                                 driveId=DataShigaUp_DriveID,
@@ -289,6 +290,7 @@ def shiga_toyo_chiba(
                             )
                             break
                         if row["出荷工場"] not in ["滋賀", "豊橋", "千葉"]:
+                            logger.warning("Lỗi: kiểm tra cột 出荷工場")
                             APIClient.write(
                                 siteId=DataShigaUp_SiteID,
                                 driveId=DataShigaUp_DriveID,
@@ -301,6 +303,7 @@ def shiga_toyo_chiba(
                         # --- Kiểm tra số lượng file --- #
                         count_floor = len(row["階"].split(",")) if hasattr(row["階"], "split") else None
                         if count_floor is None:
+                            logger.warning("Lỗi: kiểm tra cột 階")
                             APIClient.write(
                                 siteId=DataShigaUp_SiteID,
                                 driveId=DataShigaUp_DriveID,
@@ -351,6 +354,7 @@ def shiga_toyo_chiba(
                                 isError = True
                                 break
                         if isError:
+                            logger.warning("Lỗi filename")
                             APIClient.write(
                                 siteId=DataShigaUp_SiteID,
                                 driveId=DataShigaUp_DriveID,
@@ -396,6 +400,7 @@ def shiga_toyo_chiba(
                                 wb_macro.close()
                                 app.quit()
                         except Exception:
+                            logger.warning("Lỗi: Chạy macro lỗi")
                             APIClient.write(
                                 siteId=DataShigaUp_SiteID,
                                 driveId=DataShigaUp_DriveID,
@@ -428,6 +433,7 @@ def shiga_toyo_chiba(
                                 files=upload_data,
                                 steps=path,
                             ):
+                                logger.warning("Lỗi: up data")
                                 APIClient.write(
                                     siteId=DataShigaUp_SiteID,
                                     driveId=DataShigaUp_DriveID,
@@ -454,6 +460,7 @@ def shiga_toyo_chiba(
                                 files=upload_data,
                                 steps=path,
                             ):
+                                logger.warning("Lỗi: up data")
                                 APIClient.write(
                                     siteId=DataShigaUp_SiteID,
                                     driveId=DataShigaUp_DriveID,
@@ -480,6 +487,7 @@ def shiga_toyo_chiba(
                                 files=upload_data,
                                 steps=path,
                             ):
+                                logger.warning("Lỗi: up data")
                                 APIClient.write(
                                     siteId=DataShigaUp_SiteID,
                                     driveId=DataShigaUp_DriveID,
@@ -489,6 +497,7 @@ def shiga_toyo_chiba(
                                 )
                                 break
                         else:
+                            logger.warning("Lỗi: kiểm tra cột 出荷工場")
                             APIClient.write(
                                 siteId=DataShigaUp_SiteID,
                                 driveId=DataShigaUp_DriveID,
@@ -498,6 +507,7 @@ def shiga_toyo_chiba(
                             )
                             break
                         if not sp.rename_breadcrumb(url=url, new_name=f"{breadcrumb[-1]} {suffix_name}"):
+                            logger.warning("Chưa có trên Power App | Lỗi đổi tên folder")
                             APIClient.write(
                                 siteId=DataShigaUp_SiteID,
                                 driveId=DataShigaUp_DriveID,
