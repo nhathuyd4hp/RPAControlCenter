@@ -1,8 +1,6 @@
-import shutil
-import subprocess
-from pathlib import Path
 import typing
 from datetime import datetime
+
 from celery import shared_task
 
 
