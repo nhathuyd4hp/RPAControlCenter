@@ -12,7 +12,7 @@ from src.service import ResultService as minio
 
 @shared_task(bind=True, name="OHD MITSUMORI")
 def OHD_MITSUMORI(self):
-    exe_path = Path(__file__).resolve().parents[2] / "robot" / "OHDMITSUMORI" / "OHDNew_b5d7VmU.exe"
+    exe_path = Path(__file__).resolve().parents[2] / "robot" / "OHDMITSUMORI" / "OHDNew.exe"
 
     log_dir = Path(__file__).resolve().parents[3] / "logs"
     log_dir.mkdir(parents=True, exist_ok=True)
