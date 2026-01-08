@@ -384,7 +384,7 @@ def kyushu_osaka(
                         path = [
                             re.compile("^九州工場 製造データー$"),
                             re.compile(rf"^0?{int(process_date.month)}月0?{int(process_date.day)}日配送分$"),
-                            re.compile(r"^確定データ\(.+\)$"),
+                            re.compile(r"^確定データ(\(.*\))?"),
                         ]
                         if not up_trong:
                             path = [

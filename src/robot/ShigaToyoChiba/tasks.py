@@ -342,7 +342,7 @@ def shiga_toyo_chiba(
                                 data=[[f"{len(excel_files)} file / {count_floor} floors"]],
                             )
                             break
-                        logger.info("Check filename")
+                        logger.info("kiểm tra tên")
                         isError: bool = False
                         # --- Kiểm tra tên file --- #
                         for downloaded in downloads:
