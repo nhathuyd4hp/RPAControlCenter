@@ -3,6 +3,9 @@ from pathlib import Path
 
 from celery import shared_task
 
+from src.core.config import settings
+from src.service import ResultService as minio
+
 
 @shared_task(bind=True, name="Tama Zumen Soufu")
 def Tama_Zumen_Soufu(self):
@@ -16,3 +19,15 @@ def Tama_Zumen_Soufu(self):
     with open(log_file, "w", encoding="utf-8", errors="ignore") as f:
         process = subprocess.Popen([str(exe_path)], cwd=str(cwd_path), stdout=f, stderr=subprocess.STDOUT, text=True)
         process.wait()
+
+    excel_filename = "図面送付結果.xlsx"
+    excel_path = cwd_path / excel_filename
+
+    result = minio.fput_object(
+        bucket_name=settings.MINIO_BUCKET,
+        object_name=f"TamaZumenSoufu/{self.request.id}/{excel_filename}",
+        file_path=str(excel_path),
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    )
+
+    return result.object_name
