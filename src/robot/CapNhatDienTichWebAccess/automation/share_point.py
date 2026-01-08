@@ -88,13 +88,13 @@ class SharePoint:
                 try:
                     self.page.wait_for_selector("div[id='HeaderButtonRegion']", state="visible", timeout=10000)
                     self.page.wait_for_selector(
-                        selector="div[id='O365_MainLink_MePhoto']", timeout=300, state="visible"
+                        selector="div[id='O365_MainLink_MePhoto']", timeout=1000, state="visible"
                     ).click()
                     currentAccount_primary = self.page.wait_for_selector(
-                        selector="div[id='mectrl_currentAccount_primary']", timeout=300, state="visible"
+                        selector="div[id='mectrl_currentAccount_primary']", timeout=1000, state="visible"
                     ).text_content()
                     currentAccount_secondary = self.page.wait_for_selector(
-                        selector="div[id='mectrl_currentAccount_secondary']", timeout=300, state="visible"
+                        selector="div[id='mectrl_currentAccount_secondary']", timeout=1000, state="visible"
                     ).text_content()
                     self.logger.info(f"Logged in as: {currentAccount_primary} ({currentAccount_secondary})")
                     break

@@ -87,7 +87,7 @@ class WebAccess:
         building: str,
     ) -> pd.DataFrame:
         self.logger.info(
-            f"Download: ビルダー名部分一致 = {building} | 図面 = ['作図済', '送付済', 'CBUP済', 'CB送付済', '図面確定']"
+            f"Download: ビルダー名部分一致 = {building} ; 図面 = ['作図済', '送付済', 'CBUP済', 'CB送付済', '図面確定']"
         )
         try:
             self.page.bring_to_front()

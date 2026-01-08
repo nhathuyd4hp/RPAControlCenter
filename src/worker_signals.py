@@ -41,9 +41,7 @@ def task_prerun_handler(sender=None, task_id=None, **kwargs):
                 )
             )
         session.commit()
-        redis.Redis(connection_pool=REDIS_POOL).publish(
-            "CELERY", f"{sender.name.split(".")[-1].replace("_"," ").title()} bắt đầu"
-        )
+        redis.Redis(connection_pool=REDIS_POOL).publish("CELERY", f"{sender.name} bắt đầu")
 
 
 @signals.task_success.connect
@@ -57,9 +55,7 @@ def task_success_handler(sender=None, result=None, **kwargs):
         record.result = str(result)
         session.add(record)
         session.commit()
-        redis.Redis(connection_pool=REDIS_POOL).publish(
-            "CELERY", f"{record.robot.split(".")[-1].replace("_"," ").title()} hoàn thành"
-        )
+        redis.Redis(connection_pool=REDIS_POOL).publish("CELERY", f"{record.robot} hoàn thành")
 
 
 @signals.task_failure.connect
@@ -73,6 +69,4 @@ def task_failure_handler(sender=None, exception=None, **kwargs):
         record.result = str(exception)
         session.add(record)
         session.commit()
-        redis.Redis(connection_pool=REDIS_POOL).publish(
-            "CELERY", f"{record.robot.split(".")[-1].replace("_"," ").title()} có lỗi"
-        )
+        redis.Redis(connection_pool=REDIS_POOL).publish("CELERY", f"{record.robot} có lỗi")

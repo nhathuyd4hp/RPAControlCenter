@@ -4,6 +4,7 @@ import os
 import time
 from collections import defaultdict
 from contextlib import asynccontextmanager, suppress
+from datetime import datetime
 
 import redis.asyncio as redis
 from apscheduler.triggers.cron import CronTrigger
@@ -90,15 +91,33 @@ async def subscriber(*args):
             data = json.loads(data)
             task_id = data.get("task_id")
             raw_message = data.get("message")
-            timestamp, level, _, message = raw_message.split(" | ")
-            await LOG_QUEUE.put(
-                {
-                    "run_id": task_id,
-                    "timestamp": timestamp,
-                    "level": level,
-                    "message": message.strip(),
-                }
-            )
+            try:
+                timestamp, level, _, message = raw_message.split(" | ")
+                await LOG_QUEUE.put(
+                    {
+                        "run_id": task_id,
+                        "timestamp": timestamp,
+                        "level": level,
+                        "message": message.strip(),
+                    }
+                )
+            except Exception as e:
+                await LOG_QUEUE.put(
+                    {
+                        "run_id": task_id,
+                        "timestamp": datetime.now().strptime("%Y-%m-%d %H:%M:%S,%f"),
+                        "level": "INFO",
+                        "message": raw_message,
+                    }
+                )
+                await LOG_QUEUE.put(
+                    {
+                        "run_id": task_id,
+                        "timestamp": datetime.now().strptime("%Y-%m-%d %H:%M:%S,%f"),
+                        "level": "WARNING",
+                        "message": str(e),
+                    }
+                )
         await manager.broadcast(data, channel)
 
 
