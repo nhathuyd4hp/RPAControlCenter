@@ -18,7 +18,7 @@ from src.service import ResultService as minio
 @shared_task(bind=True, name="Gửi bản vẽ Toei")
 def gui_ban_ve_toei(
     self,
-    process_date: datetime,
+    process_date: datetime = datetime.now(),
 ):
     TaskID = self.request.id
     logger = Log.get_logger(channel=TaskID, redis_client=redis.Redis(connection_pool=REDIS_POOL))
