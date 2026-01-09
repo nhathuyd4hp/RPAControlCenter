@@ -1,5 +1,6 @@
 import os
 import re
+import tempfile
 from datetime import datetime
 from decimal import ROUND_HALF_UP, Decimal
 
@@ -128,11 +129,13 @@ def main(output: str):
     append_row[list(data.columns)[-1]] = data["金額（税抜）"].sum()
     data = pd.concat([data, pd.DataFrame([empty_row.to_dict(), append_row])], ignore_index=True)
     # Save
-    excel_file = f"{datetime.today().strftime('%Y-%m-%d_%H-%M-%S')}.xlsx"
+    excel_file = os.path.join(output, f"{datetime.today().strftime('%Y-%m-%d_%H-%M-%S')}.xlsx")
     data.to_excel(
         os.path.join(output, excel_file),
         index=False,
     )
+    app = None
+    wb = None
     try:
         app = xw.App(visible=False)
         wb = app.books.open(excel_file)
@@ -166,8 +169,10 @@ def main(output: str):
         sheet.api.PageSetup.FitToPagesTall = 1
         sheet.to_pdf(pdfFile)
     finally:
-        wb.close()
-        app.quit()
+        if wb:
+            wb.close()
+        if app:
+            app.quit()
         # with MailDealer(
         #     url = "https://mds3310.maildealer.jp/",
         #     username="vietnamrpa",
@@ -210,11 +215,12 @@ def main(output: str):
     name="Sakura",
 )
 def Sakura(self):
-    pdfFile = main()
-    result = minio.fput_object(
-        bucket_name=settings.MINIO_BUCKET,
-        object_name=f"Sakura/{self.request.id}/{os.path.basename(pdfFile)}",
-        file_path=pdfFile,
-        content_type="application/pdf",
-    )
-    return result.object_name
+    with tempfile.TemporaryDirectory() as temp_dir:
+        pdfFile = main(temp_dir)
+        result = minio.fput_object(
+            bucket_name=settings.MINIO_BUCKET,
+            object_name=f"Sakura/{self.request.id}/{os.path.basename(pdfFile)}",
+            file_path=pdfFile,
+            content_type="application/pdf",
+        )
+        return result.object_name
