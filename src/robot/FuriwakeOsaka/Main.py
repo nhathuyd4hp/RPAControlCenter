@@ -12,24 +12,22 @@
 # - results saved under ./Results, with 資料UP + OK/NG coloring
 # - No SharePoint upload of BOM/results, only USB folder
 
-import os, re, shutil, logging, unicodedata, math, base64
+import argparse
+import base64
+import logging
+import math
+import os
+import re
+import shutil
+import tkinter as tk
+import unicodedata
 from datetime import datetime
 from pathlib import Path, PurePosixPath
 
-import requests
+import customtkinter as ctk
 import jaconv
 import pandas as pd
-from openpyxl import load_workbook, Workbook
-from openpyxl.styles import PatternFill, Font, Alignment, Border, Side
-from openpyxl.utils import get_column_letter
-
-import tkinter as tk
-import customtkinter as ctk
-from tkcalendar import Calendar
-
-# ---------- Nasiwak / Logging ----------
-from Nasiwak import *  # Bot_Update, etc.
-from logging_setup import setup_logging
+import requests
 from bom_downloader import (
     download_factory_bom_for_date,
     download_osaka_haisha_for_date,
@@ -37,7 +35,13 @@ from bom_downloader import (
     upload_usb_to_tochigi_date,
 )
 from config_access_token import get_access_token  # Graph access token
-import argparse
+from logging_setup import setup_logging
+
+# ---------- Nasiwak / Logging ----------
+from Nasiwak import *  # Bot_Update, etc. # noqa
+from openpyxl import Workbook, load_workbook
+from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
+from openpyxl.utils import get_column_letter
 
 setup_logging()
 logger = logging.getLogger(__name__)
@@ -45,9 +49,8 @@ logger = logging.getLogger(__name__)
 GRAPH_BASE_URL = "https://graph.microsoft.com/v1.0"
 
 # ----------------- Normalisation helpers -----------------
-JA_TRANS = str.maketrans({
-    "（": "(", "）": ")", "－": "-", "ー": "-", "・": "･", "Ｆ": "F", "階": "F", "　": " "
-})
+JA_TRANS = str.maketrans({"（": "(", "）": ")", "－": "-", "ー": "-", "・": "･", "Ｆ": "F", "階": "F", "　": " "})
+
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -62,6 +65,7 @@ def parse_args():
     )
     return parser.parse_args()
 
+
 def ja_norm_strict(s: str) -> str:
     """For exact equality: z2h ascii/digit/kana, remove spaces/underscores, unify parens/dashes."""
     if s is None:
@@ -71,8 +75,10 @@ def ja_norm_strict(s: str) -> str:
     s = re.sub(r"[\s_＿]+", "", s).strip()
     return s
 
+
 def anken_key(s: str) -> str:
     return ja_norm_strict(s)
+
 
 # ★ builder＿物件名(10am訂正1027) [PDF]
 # ★ builder＿物件名(10am訂正1027)＿天井割り付け1階＊ [Excel]
@@ -89,6 +95,7 @@ FILE_RE = re.compile(
         \s*$""",
     re.X,
 )
+
 
 def extract_tokens_from_name(name: str) -> dict:
     """
@@ -120,14 +127,14 @@ def extract_tokens_from_name(name: str) -> dict:
     nm2 = nm.lstrip("★＊ ").strip()
 
     builder = None
-    bukken  = None
-    floor   = None
+    bukken = None
+    floor = None
 
     # ---- 1) manual parse ----
     parts = re.split(r"[＿_]", nm2, maxsplit=1)
     if len(parts) >= 2:
         builder_candidate = parts[0].strip()
-        rest              = parts[1].strip()
+        rest = parts[1].strip()
 
         # split off 天井割り付け part
         rest_main = rest
@@ -162,12 +169,12 @@ def extract_tokens_from_name(name: str) -> dict:
             inner = m.group(0)[1:-1]
             if looks_like_suffix_paren(inner):
                 # everything BEFORE this paren is 物件名
-                bukken_candidate = rest_main[:m.start()].strip()
+                bukken_candidate = rest_main[: m.start()].strip()
                 break
 
         if bukken_candidate:
             builder = builder_candidate
-            bukken  = bukken_candidate
+            bukken = bukken_candidate
 
     # ---- 2) fallback to regex if bukken not resolved ----
     if not bukken:
@@ -178,18 +185,19 @@ def extract_tokens_from_name(name: str) -> dict:
         if not builder:
             builder = (gd.get("builder") or "").strip()
         bukken = (gd.get("bukken") or "").strip()
-        floor  = gd.get("floor") or floor
+        floor = gd.get("floor") or floor
 
     if not bukken:
         return {}
 
     return {
-        "builder":      builder,
-        "bukken":       bukken,
-        "bukken_norm":  anken_key(bukken),
-        "floor":        floor,
-        "is_excel":     ("天井割り付け" in nm),
+        "builder": builder,
+        "bukken": bukken,
+        "bukken_norm": anken_key(bukken),
+        "floor": floor,
+        "is_excel": ("天井割り付け" in nm),
     }
+
 
 # ----------------- Version / Setup -----------------
 file_path_token = os.path.join(os.getcwd(), "Access_token", "Access_token.txt")
@@ -202,20 +210,21 @@ except Exception:
 logging.info("Access token loaded.")
 
 REPO_OWNER = "Nasiwak"
-REPO_NAME  = "koujou_furiwake_bot"
+REPO_NAME = "koujou_furiwake_bot"
 CURRENT_VERSION = "1.4.6-BOM-HAISHA-UPLOAD"
 try:
-    Bot_Update(REPO_OWNER, REPO_NAME, CURRENT_VERSION, ACCESS_TOKEN_FILE)
+    Bot_Update(REPO_OWNER, REPO_NAME, CURRENT_VERSION, ACCESS_TOKEN_FILE)  # noqa
 except Exception as e:
     logging.warning(f"Update check failed (non-blocking): {e}")
 
 # Fresh 結果 book per run — save under ./Results
-run_ts      = datetime.now().strftime("%Y%m%d_%H%M%S")
+run_ts = datetime.now().strftime("%Y%m%d_%H%M%S")
 RESULTS_DIR = os.path.join(os.getcwd(), "Results")
 os.makedirs(RESULTS_DIR, exist_ok=True)
 excelsheet = os.path.join(RESULTS_DIR, f"結果_{run_ts}.xlsx")
 
 # ----------------- General helpers -----------------
+
 
 def normalize_excel_id(val) -> str:
     """
@@ -245,12 +254,16 @@ def normalize_excel_id(val) -> str:
 
     return s
 
+
 def _norm_j(text: str) -> str:
     return (
         jaconv.h2z(text or "", ascii=True, digit=True, kana=True)
-        .replace(" ", "").replace("　", "")
-        .replace("_", "").replace("＿", "")
+        .replace(" ", "")
+        .replace("　", "")
+        .replace("_", "")
+        .replace("＿", "")
     )
+
 
 def jnorm(s: str) -> str:
     if not isinstance(s, str):
@@ -261,41 +274,47 @@ def jnorm(s: str) -> str:
     s = re.sub(r"[ \t\u3000]+", " ", s).strip()
     return s
 
+
 def _clean_header(h: str) -> str:
     s = jaconv.z2h(str(h or ""), ascii=True, digit=True, kana=False)
     s = unicodedata.normalize("NFKC", s)
     s = re.sub(r"[ \u3000\t]", "", s)
     return s
 
+
 TIME_TOKENS = re.compile(
-    r'(?:(?P<h>\d{1,2}):(?P<m>\d{2}))'
-    r'|(?:(?P<h2>\d{1,2})(?P<m2>\d{2}))'
-    r'|(?:(?P<h3>\d{1,2})(?P<ap>am|pm))',
-    re.IGNORECASE
+    r"(?:(?P<h>\d{1,2}):(?P<m>\d{2}))" r"|(?:(?P<h2>\d{1,2})(?P<m2>\d{2}))" r"|(?:(?P<h3>\d{1,2})(?P<ap>am|pm))",
+    re.IGNORECASE,
 )
+
 
 def extract_time_token(name: str):
     s = (name or "").lower()
     m = TIME_TOKENS.search(s)
     if not m:
         return None
-    if m.group('h') and m.group('m'):
-        hh = int(m.group('h')); mm = int(m.group('m'))
-    elif m.group('h2') and m.group('m2'):
-        hh = int(m.group('h2')); mm = int(m.group('m2'))
+    if m.group("h") and m.group("m"):
+        hh = int(m.group("h"))
+        mm = int(m.group("m"))
+    elif m.group("h2") and m.group("m2"):
+        hh = int(m.group("h2"))
+        mm = int(m.group("m2"))
     else:
-        hh = int(m.group('h3')); mm = 0
-        if m.group('ap') == 'pm' and hh != 12:
+        hh = int(m.group("h3"))
+        mm = 0
+        if m.group("ap") == "pm" and hh != 12:
             hh += 12
-        if m.group('ap') == 'am' and hh == 12:
+        if m.group("ap") == "am" and hh == 12:
             hh = 0
     return f"{hh:02d}{mm:02d}"
 
+
 def safe_set(ws, cell_ref, value):
-    if isinstance(value, str) and value[:1] in ('=', '+'):
+    if isinstance(value, str) and value[:1] in ("=", "+"):
         ws[cell_ref] = "'" + value
     else:
         ws[cell_ref] = value
+
 
 def _parse_floor(val) -> int:
     """
@@ -337,8 +356,10 @@ def _parse_floor(val) -> int:
 
     return 1
 
+
 OK_FILL = PatternFill(start_color="C6EFCE", end_color="C6EFCE", fill_type="solid")
 NG_FILL = PatternFill(start_color="FFC7CE", end_color="FFC7CE", fill_type="solid")
+
 
 def color_result_row(ws, row_idx: int, result_text: str):
     headers = [ws.cell(row=1, column=c).value for c in range(1, ws.max_column + 1)]
@@ -352,15 +373,26 @@ def color_result_row(ws, row_idx: int, result_text: str):
     elif isinstance(result_text, str) and result_text.strip().upper().startswith("NG"):
         cell.fill = NG_FILL
 
+
 def create_new_result_excel(path: str):
     wb = Workbook()
     ws = wb.active
     ws.title = "結果"
     headers = [
-        "案件番号", "ビルダー名", "物件名", "階",
-        "PDF数", "Excel数", "一致PDF", "一致Excel",
-        "判定理由", "結果", "資料UP",
-        "号車", "追加不足", "配送時特記事項",
+        "案件番号",
+        "ビルダー名",
+        "物件名",
+        "階",
+        "PDF数",
+        "Excel数",
+        "一致PDF",
+        "一致Excel",
+        "判定理由",
+        "結果",
+        "資料UP",
+        "号車",
+        "追加不足",
+        "配送時特記事項",
     ]
     for i, h in enumerate(headers, start=1):
         safe_set(ws, f"{get_column_letter(i)}1", h)
@@ -372,10 +404,11 @@ def create_new_result_excel(path: str):
 
 
 # ----------------- Styling -----------------
-thin       = Side(style="thin", color="000000")
+thin = Side(style="thin", color="000000")
 border_all = Border(left=thin, right=thin, top=thin, bottom=thin)
 header_fill = PatternFill(start_color="EEEEEE", end_color="EEEEEE", fill_type="solid")
 header_font = Font(bold=True)
+
 
 def style_headers(ws, header_row: int, num_cols: int):
     # Header row height a bit taller
@@ -383,10 +416,11 @@ def style_headers(ws, header_row: int, num_cols: int):
 
     for col in range(1, num_cols + 1):
         cell = ws.cell(row=header_row, column=col)
-        cell.font      = header_font
+        cell.font = header_font
         cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
-        cell.fill      = header_fill
-        cell.border    = border_all
+        cell.fill = header_fill
+        cell.border = border_all
+
 
 def style_table(ws, first_data_row: int, last_row: int, last_col: int):
     if last_row < first_data_row:
@@ -437,7 +471,7 @@ def style_table(ws, first_data_row: int, last_row: int, last_col: int):
     max_width = {c: 0 for c in range(1, last_col + 1)}
     for r in range(1, last_row + 1):
         for c in range(1, last_col + 1):
-            v  = ws.cell(row=r, column=c).value
+            v = ws.cell(row=r, column=c).value
             ln = len(str(v)) if v is not None else 0
             if ln > max_width[c]:
                 max_width[c] = ln
@@ -477,22 +511,31 @@ def add_ng_sheet_and_metrics(wb_path: str, counters: dict):
         style_table(ng, 2, write_row - 1, len(headers))
 
     last = ws.max_row + 2
-    safe_set(ws, f"A{last}",     "Summary")
-    safe_set(ws, f"A{last+1}",   "合計件数");        safe_set(ws, f"B{last+1}", counters.get("total_rows", 0))
-    safe_set(ws, f"A{last+2}",   "OK件数");          safe_set(ws, f"B{last+2}", counters.get("ok", 0))
-    safe_set(ws, f"A{last+3}",   "NG件数");          safe_set(ws, f"B{last+3}", counters.get("ng", 0))
-    safe_set(ws, f"A{last+4}",   "重複PDF件数");      safe_set(ws, f"B{last+4}", counters.get("dup", 0))
-    safe_set(ws, f"A{last+5}",   "時刻不一致件数");    safe_set(ws, f"B{last+5}", counters.get("ts_mismatch", 0))
-    safe_set(ws, f"A{last+6}",   "アップロード数");    safe_set(ws, f"B{last+6}", counters.get("uploaded", 0))
+    safe_set(ws, f"A{last}", "Summary")
+    safe_set(ws, f"A{last+1}", "合計件数")
+    safe_set(ws, f"B{last+1}", counters.get("total_rows", 0))
+    safe_set(ws, f"A{last+2}", "OK件数")
+    safe_set(ws, f"B{last+2}", counters.get("ok", 0))
+    safe_set(ws, f"A{last+3}", "NG件数")
+    safe_set(ws, f"B{last+3}", counters.get("ng", 0))
+    safe_set(ws, f"A{last+4}", "重複PDF件数")
+    safe_set(ws, f"B{last+4}", counters.get("dup", 0))
+    safe_set(ws, f"A{last+5}", "時刻不一致件数")
+    safe_set(ws, f"B{last+5}", counters.get("ts_mismatch", 0))
+    safe_set(ws, f"A{last+6}", "アップロード数")
+    safe_set(ws, f"B{last+6}", counters.get("uploaded", 0))
 
     style_table(ws, 2, ws.max_row, ws.max_column)
-    wb.save(wb_path); wb.close()
+    wb.save(wb_path)
+    wb.close()
+
 
 # ----------------- SharePoint upload helpers -----------------
 def _encode_share_url(url: str) -> str:
     """Encode a SharePoint URL into Graph /shares ID."""
     b = url.encode("utf-8")
     return "u!" + base64.urlsafe_b64encode(b).decode("ascii").rstrip("=")
+
 
 def upload_usb_to_osaka_date(jp_date: str, usb_folder: Path) -> int:
     """
@@ -508,15 +551,14 @@ def upload_usb_to_osaka_date(jp_date: str, usb_folder: Path) -> int:
         return 0
 
     target_url = (
-        "https://nskkogyo.sharepoint.com/sites/yanase/"
-        "Shared Documents/大阪工場　製造データ/{date}"
+        "https://nskkogyo.sharepoint.com/sites/yanase/" "Shared Documents/大阪工場　製造データ/{date}"
     ).format(date=jp_date)
 
     logging.info(f"[Graph] USB upload target URL (date folder): {target_url}")
 
     share_id = _encode_share_url(target_url)
-    token    = get_access_token()
-    headers  = {"Authorization": f"Bearer {token}"}
+    token = get_access_token()
+    headers = {"Authorization": f"Bearer {token}"}
 
     # Resolve the *date* folder driveItem
     resp = requests.get(
@@ -524,13 +566,11 @@ def upload_usb_to_osaka_date(jp_date: str, usb_folder: Path) -> int:
         headers=headers,
     )
     if not resp.ok:
-        logging.error(
-            f"[Graph] Failed to resolve date folder: {resp.status_code} {resp.text}"
-        )
+        logging.error(f"[Graph] Failed to resolve date folder: {resp.status_code} {resp.text}")
         return 0
 
-    info      = resp.json()
-    drive_id  = info["parentReference"]["driveId"]
+    info = resp.json()
+    drive_id = info["parentReference"]["driveId"]
     parent_id = info["id"]
 
     usb_name = usb_folder.name  # should be "▽USB"
@@ -547,16 +587,9 @@ def upload_usb_to_osaka_date(jp_date: str, usb_folder: Path) -> int:
             if rel_root == Path("."):
                 remote_rel = str(PurePosixPath(usb_name) / fname)
             else:
-                remote_rel = str(
-                    PurePosixPath(usb_name)
-                    / PurePosixPath(rel_root.as_posix())
-                    / fname
-                )
+                remote_rel = str(PurePosixPath(usb_name) / PurePosixPath(rel_root.as_posix()) / fname)
 
-            put_url = (
-                f"{GRAPH_BASE_URL}/drives/{drive_id}/items/{parent_id}:/"
-                f"{remote_rel}:/content"
-            )
+            put_url = f"{GRAPH_BASE_URL}/drives/{drive_id}/items/{parent_id}:/" f"{remote_rel}:/content"
 
             try:
                 with open(local_path, "rb") as f:
@@ -565,15 +598,13 @@ def upload_usb_to_osaka_date(jp_date: str, usb_folder: Path) -> int:
                     uploaded += 1
                     logging.info(f"[Graph] Uploaded {remote_rel} → {target_url}")
                 else:
-                    logging.error(
-                        f"[Graph] Upload failed for {remote_rel}: "
-                        f"{put_resp.status_code} {put_resp.text}"
-                    )
+                    logging.error(f"[Graph] Upload failed for {remote_rel}: " f"{put_resp.status_code} {put_resp.text}")
             except Exception as e:
                 logging.error(f"[Graph] Exception during upload for {remote_rel}: {e}")
 
     logging.info(f"[Graph] USB upload completed. Files uploaded: {uploaded}")
     return uploaded
+
 
 # ----------------- Factory key resolver -----------------
 def resolve_factory_key(factory_label: str) -> str | None:
@@ -592,16 +623,17 @@ def resolve_factory_key(factory_label: str) -> str | None:
         return "滋賀"
     return None
 
+
 # ----------------- Core (furiwake) -----------------
 class process:
     def __init__(self, from_date, to_date) -> None:
-        self.from_date = from_date        # 工場 (e.g. "大阪工場　製造データ")
-        self.to_date   = to_date          # "11月15日" etc.
+        self.from_date = from_date  # 工場 (e.g. "大阪工場　製造データ")
+        self.to_date = to_date  # "11月15日" etc.
         logging.info(f"Run params — 工場:{self.from_date} / 日付:{self.to_date}")
 
-        self.base_dir      = Path.cwd()
-        self.usb_folder    = r'▽USB'
-        self.haisha_folder = r'配車表'
+        self.base_dir = Path.cwd()
+        self.usb_folder = r"▽USB"
+        self.haisha_folder = r"配車表"
         self.bom_root: Path | None = None
 
         # Fresh start: wipe BOM, USB, 配車表 and recreate for this run
@@ -622,8 +654,7 @@ class process:
                 )
                 if self.bom_root is None:
                     logging.warning(
-                        f"No BOM files downloaded for factory '{factory_key}' "
-                        f"and date '{self.to_date}'."
+                        f"No BOM files downloaded for factory '{factory_key}' " f"and date '{self.to_date}'."
                     )
                 else:
                     logging.info(f"BOM root for this run: {self.bom_root}")
@@ -640,15 +671,12 @@ class process:
                     )
                     if haisha_root is None:
                         logging.warning(
-                            f"配車表 not downloaded for 大阪, date '{self.to_date}'. "
-                            f"配車表 folder may be empty."
+                            f"配車表 not downloaded for 大阪, date '{self.to_date}'. " f"配車表 folder may be empty."
                         )
                     else:
                         logging.info(f"配車表 saved under: {haisha_root}")
                 except Exception as e:
-                    logging.error(
-                        f"配車表 download failed for 大阪, date '{self.to_date}': {e}"
-                    )
+                    logging.error(f"配車表 download failed for 大阪, date '{self.to_date}': {e}")
             elif factory_key == "栃木":
                 try:
                     haisha_root = download_tochigi_haisha_for_date(
@@ -657,31 +685,25 @@ class process:
                     )
                     if haisha_root is None:
                         logging.warning(
-                            f"配車表 not downloaded for 栃木, date '{self.to_date}'. "
-                            f"配車表 folder may be empty."
+                            f"配車表 not downloaded for 栃木, date '{self.to_date}'. " f"配車表 folder may be empty."
                         )
                     else:
                         logging.info(f"栃木 配車表 saved under: {haisha_root}")
                 except Exception as e:
                     logging.error(f"配車表 download failed for 栃木, date '{self.to_date}': {e}")
 
-
         else:
-            logging.info(
-                f"No BOM mapping for 工場={self.from_date}; skipping BOM/配車 download."
-            )
+            logging.info(f"No BOM mapping for 工場={self.from_date}; skipping BOM/配車 download.")
 
         # Metrics
-        self.metrics = dict(
-            total_rows=0, ok=0, ng=0, dup=0, ts_mismatch=0, uploaded=0
-        )
+        self.metrics = dict(total_rows=0, ok=0, ng=0, dup=0, ts_mismatch=0, uploaded=0)
 
         self.missing_bom_rows = []
 
         # 🔹 MAIN FURIWAKE LOGIC 🔹
         # This reads 配車表, matches against BOM, writes 結果 sheet & moves files into ▽USB
         self.compare_ankenmei()
-        self.write_missing_bom_sheet() 
+        self.write_missing_bom_sheet()
 
         factory_key = resolve_factory_key(self.from_date)
         usb_path = self.base_dir / self.usb_folder
@@ -764,7 +786,6 @@ class process:
             total += len(files)
         return total
 
-
     # ---- BOM artifact lookup ----
     def find_artifacts_for_anken(self, anken_key_norm: str):
         """
@@ -800,15 +821,12 @@ class process:
             return "UNKNOWN"
 
         strict_pdfs, strict_excels, strict_floors = [], [], set()
-        loose_pdfs,  loose_excels,  loose_floors  = [], [], set()
+        loose_pdfs, loose_excels, loose_floors = [], [], set()
 
         for root, _, files in os.walk(base):
             for file in files:
                 low = file.lower()
-                if not (
-                    low.endswith(".pdf")
-                    or low.endswith((".xlsx", ".xls", ".csv"))
-                ):
+                if not (low.endswith(".pdf") or low.endswith((".xlsx", ".xls", ".csv"))):
                     continue
 
                 toks = extract_tokens_from_name(file)
@@ -831,9 +849,7 @@ class process:
                     continue
 
                 # ---- loose match: one contains the other ----
-                if anken_key_norm and (
-                    anken_key_norm in bukken_norm or bukken_norm in anken_key_norm
-                ):
+                if anken_key_norm and (anken_key_norm in bukken_norm or bukken_norm in anken_key_norm):
                     if low.endswith(".pdf"):
                         loose_pdfs.append(full_path)
                     else:
@@ -843,21 +859,21 @@ class process:
         # Prefer strict, fallback to loose
         if strict_pdfs or strict_excels:
             return {
-                "pdfs":   strict_pdfs,
+                "pdfs": strict_pdfs,
                 "excels": strict_excels,
                 "floors": strict_floors,
             }
         else:
             return {
-                "pdfs":   loose_pdfs,
+                "pdfs": loose_pdfs,
                 "excels": loose_excels,
                 "floors": loose_floors,
             }
 
     def create_folder_and_move_matched_files(self, matched_files):
         try:
-            go_folder  = os.path.join(self.usb_folder, self.号車)
-            waritsuke  = os.path.join(go_folder, "割付図")
+            go_folder = os.path.join(self.usb_folder, self.号車)
+            waritsuke = os.path.join(go_folder, "割付図")
             os.makedirs(waritsuke, exist_ok=True)
             for file_path in matched_files:
                 if not os.path.isfile(file_path):
@@ -885,7 +901,7 @@ class process:
             wb.close()
             logging.info("資料UP column not present; skip updating.")
             return
-        col_kekka   = headers.index("結果") + 1
+        col_kekka = headers.index("結果") + 1
         col_shiryou = headers.index("資料UP") + 1
 
         row_count = 0
@@ -899,17 +915,18 @@ class process:
         for i, row in enumerate(ws.iter_rows(min_row=2), start=1):
             if i > row_count:
                 break
-            r    = str(row[col_kekka - 1].value or "")
+            r = str(row[col_kekka - 1].value or "")
             cell = row[col_shiryou - 1]
-            val  = "OK" if (status == "OK" and r == "OK") else "NG"
-            if isinstance(val, str) and val.startswith(('=', '+')):
+            val = "OK" if (status == "OK" and r == "OK") else "NG"
+            if isinstance(val, str) and val.startswith(("=", "+")):
                 cell.value = "'" + val
             else:
                 cell.value = val
 
-        wb.save(fp); wb.close()
+        wb.save(fp)
+        wb.close()
         logging.info("資料UP updated.")
-    
+
     def write_missing_bom_sheet(self):
         """Create sheet '未UP案件' listing 配送先 with zero BOM files."""
         if not self.missing_bom_rows:
@@ -940,21 +957,22 @@ class process:
         wb.close()
         logging.info("未UP案件 sheet created.")
 
-
     # ------------ 配車読み込み & 判定 ------------"
 
     def compare_ankenmei(self):
         folder_path = os.path.join(os.getcwd(), "配車表")
-        xls_path    = None
-        xlsx_path   = None
+        xls_path = None
+        xlsx_path = None
 
         # ---- Find 配車 file ----
         for root, _, files in os.walk(folder_path):
             for f in files:
                 if "配車" in f and f.lower().endswith(".xls"):
-                    xls_path = os.path.join(root, f); break
+                    xls_path = os.path.join(root, f)
+                    break
                 if "配車" in f and f.lower().endswith(".xlsx"):
-                    xlsx_path = os.path.join(root, f); break
+                    xlsx_path = os.path.join(root, f)
+                    break
             if xls_path or xlsx_path:
                 break
 
@@ -969,8 +987,9 @@ class process:
         else:
             try:
                 import win32com.client
+
                 password = "nsk"
-                excel    = win32com.client.Dispatch("Excel.Application")
+                excel = win32com.client.Dispatch("Excel.Application")
                 excel.DisplayAlerts = False
                 wb_x = excel.Workbooks.Open(xls_path, False, True, None, password)
                 wb_x.SaveAs(temp_xlsx, FileFormat=51)
@@ -993,13 +1012,13 @@ class process:
         def pick(name):
             return norm_map.get(name)
 
-        col_bukken   = pick("配送先")
-        col_kai      = pick("階")
-        col_builder  = pick("ビルダー名") or pick("得意先名")
-        col_anken    = pick("案件番号")
-        col_go       = pick("号車") or pick("号")
-        col_status   = pick("追加不足")
-        col_tokki    = pick("配送時特記事項")
+        col_bukken = pick("配送先")
+        col_kai = pick("階")
+        col_builder = pick("ビルダー名") or pick("得意先名")
+        col_anken = pick("案件番号")
+        col_go = pick("号車") or pick("号")
+        col_status = pick("追加不足")
+        col_tokki = pick("配送時特記事項")
 
         if not (col_bukken and col_kai):
             logging.error("予定シートに必要列不足: 配送先/階 が見つかりません。")
@@ -1018,14 +1037,13 @@ class process:
         # =============================
         for _, r in df.iterrows():
             anken_no = normalize_excel_id(r.get(col_anken, "")) if col_anken else ""
-            builder  = str(r.get(col_builder, "") or "").strip() if col_builder else ""
-            bukken   = str(r.get(col_bukken, "") or "").strip()
-            floors   = _parse_floor(r.get(col_kai, ""))
+            builder = str(r.get(col_builder, "") or "").strip() if col_builder else ""
+            bukken = str(r.get(col_bukken, "") or "").strip()
+            floors = _parse_floor(r.get(col_kai, ""))
 
             # 号車
             go_raw = r.get(col_go, "") if col_go else ""
             go = normalize_excel_id(go_raw).upper()
-
 
             # 追加不足
             status = str(r.get(col_status, "") or "").strip() if col_status else ""
@@ -1036,39 +1054,53 @@ class process:
             # ---- Missing 配送先 ----
             if not bukken:
                 vals = [
-                    anken_no, builder, "", floors,
-                    0, 0, "", "",
-                    "配送先(物件名)欠落", "NG", "NG",
-                    go, status, tokki,
+                    anken_no,
+                    builder,
+                    "",
+                    floors,
+                    0,
+                    0,
+                    "",
+                    "",
+                    "配送先(物件名)欠落",
+                    "NG",
+                    "NG",
+                    go,
+                    status,
+                    tokki,
                 ]
                 for i, v in enumerate(vals, start=1):
                     safe_set(ws, f"{get_column_letter(i)}{write_row}", v)
                 color_result_row(ws, write_row, "NG")
                 write_row += 1
-                total_ng  += 1
+                total_ng += 1
                 continue
 
             # ---- Find BOM artifacts ----
             key_norm = anken_key(bukken)
-            arts     = self.find_artifacts_for_anken(key_norm)
-            pdf_count   = len(arts["pdfs"])
+            arts = self.find_artifacts_for_anken(key_norm)
+            pdf_count = len(arts["pdfs"])
             excel_count = len(arts["excels"])
 
-            matched_pdf_name   = os.path.basename(arts["pdfs"][0]) if pdf_count > 0 else ""
-            matched_excel_name = " | ".join(sorted(os.path.basename(p) for p in arts["excels"])) if excel_count > 0 else ""
+            matched_pdf_name = os.path.basename(arts["pdfs"][0]) if pdf_count > 0 else ""
+            matched_excel_name = (
+                " | ".join(sorted(os.path.basename(p) for p in arts["excels"])) if excel_count > 0 else ""
+            )
 
             # --------------------------
             # 🔥 NEW FEATURE:
             # If BOTH PDF=0 AND Excel=0 → add to 未UP案件 list
             # --------------------------
             if pdf_count == 0 and excel_count == 0:
-                self.missing_bom_rows.append({
-                    "go": go,
-                    "anken": anken_no,
-                    "builder": builder,
-                    "bukken": bukken,
-                    "floors": floors,
-                })
+                self.missing_bom_rows.append(
+                    {
+                        "go": go,
+                        "anken": anken_no,
+                        "builder": builder,
+                        "bukken": bukken,
+                        "floors": floors,
+                    }
+                )
 
             # ---- 判定 ----
             reasons = []
@@ -1077,26 +1109,32 @@ class process:
             if excel_count != floors:
                 reasons.append(f"Excel数={excel_count} (期待:{floors})")
 
-            result  = "OK" if not reasons else "NG"
+            result = "OK" if not reasons else "NG"
             shiryou = "NG"
 
             # ---- FURIWAKE (OK only) ----
             if result == "OK" and (arts["pdfs"] or arts["excels"]):
                 try:
                     self.号車 = go or "未指定"
-                    move_status = self.create_folder_and_move_matched_files(
-                        arts["pdfs"] + arts["excels"]
-                    )
                 except Exception as e:
                     logging.error(f"Furiwake move error for '{bukken}': {e}")
 
             # ---- Write row ----
             vals = [
-                anken_no, builder, bukken, floors,
-                pdf_count, excel_count,
-                matched_pdf_name, matched_excel_name,
-                " / ".join(reasons), result, shiryou,
-                go, status, tokki,
+                anken_no,
+                builder,
+                bukken,
+                floors,
+                pdf_count,
+                excel_count,
+                matched_pdf_name,
+                matched_excel_name,
+                " / ".join(reasons),
+                result,
+                shiryou,
+                go,
+                status,
+                tokki,
             ]
 
             for i, v in enumerate(vals, start=1):
@@ -1106,8 +1144,8 @@ class process:
 
             color_result_row(ws, write_row, result)
             write_row += 1
-            total_ok  += int(result == "OK")
-            total_ng  += int(result == "NG")
+            total_ok += int(result == "OK")
+            total_ng += int(result == "NG")
 
         # ---- Style ----
         if write_row > 2:
@@ -1115,8 +1153,8 @@ class process:
 
         # ---- Update metrics ----
         self.metrics["total_rows"] = write_row - 2
-        self.metrics["ok"]        = total_ok
-        self.metrics["ng"]        = total_ng
+        self.metrics["ok"] = total_ok
+        self.metrics["ng"] = total_ng
 
         wb.save(self.excelsheet)
         wb.close()
@@ -1126,8 +1164,8 @@ class process:
 class DateHandler:
     def __init__(self, from_date, to_date, app=None):
         self.from_date = from_date
-        self.to_date   = to_date
-        self.app       = app
+        self.to_date = to_date
+        self.app = app
         self.process_dates()
 
     def process_dates(self):
@@ -1142,8 +1180,10 @@ class DateHandler:
             if self.app:
                 self.app.set_busy(False)
 
+
 class App:
-    def __init__(self, 
+    def __init__(
+        self,
         root: ctk.CTk,
         工場: str,
         日付: str,
@@ -1162,9 +1202,11 @@ class App:
         )
         self.subtitle.pack(pady=(10, 0))
 
-        frm = ctk.CTkFrame(self.root); frm.pack(fill="x", padx=16, pady=12)
+        frm = ctk.CTkFrame(self.root)
+        frm.pack(fill="x", padx=16, pady=12)
 
-        row1 = ctk.CTkFrame(frm); row1.pack(fill="x", pady=6)
+        row1 = ctk.CTkFrame(frm)
+        row1.pack(fill="x", pady=6)
         ctk.CTkLabel(row1, text="工場", width=80, anchor="e").pack(side="left", padx=6)
         self.from_date_entry = ctk.CTkOptionMenu(
             row1,
@@ -1172,7 +1214,8 @@ class App:
         )
         self.from_date_entry.pack(side="left", padx=6)
 
-        row2 = ctk.CTkFrame(frm); row2.pack(fill="x", pady=6)
+        row2 = ctk.CTkFrame(frm)
+        row2.pack(fill="x", pady=6)
         ctk.CTkLabel(row2, text="日付", width=80, anchor="e").pack(side="left", padx=6)
         self.to_date_entry = ctk.CTkEntry(row2, placeholder_text="例) 11月15日")
         self.to_date_entry.pack(side="left", padx=6, fill="x", expand=True)
@@ -1185,7 +1228,8 @@ class App:
         self.status = ctk.CTkLabel(self.root, text="待機中", anchor="center")
         self.status.pack(pady=(4, 8))
 
-        btns = ctk.CTkFrame(self.root); btns.pack(pady=8)
+        btns = ctk.CTkFrame(self.root)
+        btns.pack(pady=8)
         self.start_button = ctk.CTkButton(btns, text="実行", width=140, command=self.on_start)
         self.start_button.pack(side="left", padx=10)
         self.close_button = ctk.CTkButton(btns, text="閉じる", width=120, command=self.root.destroy)
@@ -1197,7 +1241,7 @@ class App:
         )
         self.footer.pack(pady=(8, 12))
 
-        self.root.after(15000,self.on_start)
+        self.root.after(15000, self.on_start)
 
     def set_busy(self, busy: bool):
         try:
@@ -1223,13 +1267,14 @@ class App:
         self.root.quit()
         self.root.destroy()
 
+
 if __name__ == "__main__":
     args = parse_args()
-    
+
     root = ctk.CTk()
     app = App(
         root,
-        工場 = args.工場,
-        日付 = args.日付,
+        工場=args.工場,
+        日付=args.日付,
     )
     root.mainloop()

@@ -1,9 +1,11 @@
 # config.py
 import logging
-from Nasiwak import create_json_config
 import os
 
-from config_access_token import token_file
+from Nasiwak import create_json_config
+
+from src.core.config import settings
+
 # Replace with your actual file path
 file_path = os.path.join(os.getcwd(), "Access_token", "Access_token.txt")
 # logging.info(f"file path for text file is: {file_path}")
@@ -11,8 +13,7 @@ file_path = os.path.join(os.getcwd(), "Access_token", "Access_token.txt")
 with open(file_path, "r", encoding="utf-8") as file:
     content = file.read()
 # logging.info(f"Extracted text from .txt file is: {content}")
- 
- 
+
 
 ACCESS_TOKEN = content
 
@@ -31,9 +32,9 @@ except Exception as e:
     logging.error(f"❌ Failed to load configs: {e}")
 
 # 📚 Microsoft Graph API Credentials
-CLIENT_ID = "033de5e1-a34c-44bf-bc08-8957eb61d7e3"
-CLIENT_SECRET = "vXj8Q~RKuGwBpgB2M6WySVn.yyyzlwCm0fpuJa3j"
-TENANT_ID = "3255306b-4eff-41c9-89fb-3e24e65f48a1"
+CLIENT_ID = settings.API_SHAREPOINT_CLIENT_ID
+CLIENT_SECRET = settings.API_SHAREPOINT_CLIENT_SECRET
+TENANT_ID = settings.API_SHAREPOINT_TENANT_ID
 
 # 🌎 Microsoft Graph API URLs
 BASE_URL = "https://graph.microsoft.com/v1.0"
@@ -52,16 +53,13 @@ DRIVE_IDS = [
     "b!XKuZyeFTlkSp4cWfSxd10AfxU7PGA3xBi27uhOfFFMi2WzsMrIhERLjKzloPS0YK",  # や・ら・わ行
     "b!XKuZyeFTlkSp4cWfSxd10AfxU7PGA3xBi27uhOfFFMihKuZWYmqkTqqy3R9t3aff",  # は行
     "b!XKuZyeFTlkSp4cWfSxd10AfxU7PGA3xBi27uhOfFFMhYgcNNyw5IQKep4L6_VFIk",  # あ行
-
     # Site: Kantou
     "b!CGMwpFZqO0aR13-uULpoA739OTZDETFKpDsa-PGqFCBe0TiC03OyTLyZUjcaE8e9",  # ドキュメント
     "b!CGMwpFZqO0aR13-uULpoA739OTZDETFKpDsa-PGqFCBMszIEG92nQ76ejmAOfnzy",  # 新ドキュメント(関東)
     "b!CGMwpFZqO0aR13-uULpoA739OTZDETFKpDsa-PGqFCCdvvkNEUAUTb8Gxjm9oin3",  # 検索構成リスト
-
     # Site: 2019
     "b!sCgCnWR2UkGKdRInfBWzdlcnAGNMtfdEjamzCOTJHvCO1eFDmXWzRpY7g3QpUVA-",  # Documents
     "b!sCgCnWR2UkGKdRInfBWzdlcnAGNMtfdEjamzCOTJHvANeCwNSd0wTZ7-9-ersYK5",  # タマホーム
-
     # Site: Shuuko
     "b!vArDktlKE0uGKwPHe6i71cHlFfas-b9DhL0W0_9h3SLpFob0RyrQRrPmZvYxcvot",  # Documents
     "b!vArDktlKE0uGKwPHe6i71cHlFfas-b9DhL0W0_9h3SLNUAN_SP5FRZzzVzIygXm8",  # Search Config List
@@ -79,9 +77,9 @@ STATUS_COLUMN = "Download Status"
 
 # ✨ Folder Paths
 BASE_DIR = os.getcwd()
-CSV_INPUT_FOLDER = os.path.join(BASE_DIR, "CSV")          # Folder where CSVs are stored
-EXCEL_OUTPUT_FOLDER = os.path.join(BASE_DIR, "Excels")     # Folder where Excel files are saved
-DOWNLOAD_DIR = os.path.join(BASE_DIR, "Ankens")            # Folder where PDFs are downloaded
+CSV_INPUT_FOLDER = os.path.join(BASE_DIR, "CSV")  # Folder where CSVs are stored
+EXCEL_OUTPUT_FOLDER = os.path.join(BASE_DIR, "Excels")  # Folder where Excel files are saved
+DOWNLOAD_DIR = os.path.join(BASE_DIR, "Ankens")  # Folder where PDFs are downloaded
 
 # ✨ Other configs
 REGION = "JPN"  # For Microsoft Graph Search API (Japan site)

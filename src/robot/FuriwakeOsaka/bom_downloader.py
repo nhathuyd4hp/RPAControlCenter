@@ -19,16 +19,14 @@ For backward compatibility, the old helper:
 is still provided and internally calls the generic function.
 """
 
-import logging
 import base64
-from pathlib import Path
-
-import requests
-from token_manager import get_access_token
-from config import BASE_URL  # same BASE_URL used in graph_downloader.py
+import logging
 import os
 from pathlib import Path, PurePosixPath
 
+import requests
+from config import BASE_URL  # same BASE_URL used in graph_downloader.py
+from token_manager import get_access_token
 
 GRAPH_BASE_URL = "https://graph.microsoft.com/v1.0"
 
@@ -48,31 +46,18 @@ FACTORY_SHARE_URLS: dict[str, str] = {
         "https://nskkogyo.sharepoint.com/sites/yanase/"
         "Shared Documents/大阪工場　製造データ/{date}/🔹関西工場確定データ🔹"
     ),
-
     # 栃木（真岡工場）
     "栃木": (
-        "https://nskkogyo.sharepoint.com/sites/mouka/"
-        "Shared Documents/真岡工場　製造データ/{date}/栃木工場確定データ"
+        "https://nskkogyo.sharepoint.com/sites/mouka/" "Shared Documents/真岡工場　製造データ/{date}/栃木工場確定データ"
     ),
-
     # 千葉
-    "千葉": (
-        "https://nskkogyo.sharepoint.com/sites/nskhome/"
-        "Shared Documents/千葉工場 製造データ/{date}"
-    ),
-
+    "千葉": ("https://nskkogyo.sharepoint.com/sites/nskhome/" "Shared Documents/千葉工場 製造データ/{date}"),
     # 豊橋
-    "豊橋": (
-        "https://nskkogyo.sharepoint.com/sites/toyohashi/"
-        "Shared Documents/豊橋工場製造データ/{date}"
-    ),
-
+    "豊橋": ("https://nskkogyo.sharepoint.com/sites/toyohashi/" "Shared Documents/豊橋工場製造データ/{date}"),
     # 九州
     "九州": (
-        "https://nskkogyo.sharepoint.com/sites/kyuusyuukouzyou/"
-        "Shared Documents/九州工場 製造データー/{date}/製造"
+        "https://nskkogyo.sharepoint.com/sites/kyuusyuukouzyou/" "Shared Documents/九州工場 製造データー/{date}/製造"
     ),
-
     # 滋賀
     "滋賀": (
         "https://nskkogyo.sharepoint.com/sites/shiga/"
@@ -86,7 +71,7 @@ def _encode_share_url(url: str) -> str:
     Graph /shares API expects a base64url-encoded share URL with 'u!' prefix.
     """
     b64 = base64.b64encode(url.encode("utf-8")).decode("ascii")
-    b64 = b64.rstrip("=")          # remove padding
+    b64 = b64.rstrip("=")  # remove padding
     b64 = b64.replace("+", "-").replace("/", "_")
     return f"u!{b64}"
 
@@ -116,17 +101,13 @@ def download_factory_bom_for_date(
     factory_key = factory_label.strip()
 
     if factory_key not in FACTORY_SHARE_URLS:
-        logging.info(
-            f"[Graph] No SharePoint BOM path configured for factory: {factory_key}"
-        )
+        logging.info(f"[Graph] No SharePoint BOM path configured for factory: {factory_key}")
         return None
 
     url_template = FACTORY_SHARE_URLS[factory_key]
     target_url = url_template.format(date=jp_folder_name)
 
-    logging.info(
-        f"[Graph] BOM target SharePoint URL for factory '{factory_key}': {target_url}"
-    )
+    logging.info(f"[Graph] BOM target SharePoint URL for factory '{factory_key}': {target_url}")
 
     share_id = _encode_share_url(target_url)
     list_url = f"{BASE_URL}/shares/{share_id}/driveItem/children"
@@ -135,33 +116,22 @@ def download_factory_bom_for_date(
     try:
         resp = requests.get(list_url, headers=headers)
     except Exception as e:
-        logging.error(
-            f"[Graph] BOM list request failed for factory '{factory_key}': {e}"
-        )
+        logging.error(f"[Graph] BOM list request failed for factory '{factory_key}': {e}")
         return None
 
     if resp.status_code == 404:
-        logging.warning(
-            f"[Graph] BOM folder not found for factory '{factory_key}', "
-            f"date '{jp_folder_name}'"
-        )
+        logging.warning(f"[Graph] BOM folder not found for factory '{factory_key}', " f"date '{jp_folder_name}'")
         return None
 
     try:
         resp.raise_for_status()
     except Exception as e:
-        logging.error(
-            f"[Graph] BOM list error for factory '{factory_key}': {e} | "
-            f"body={resp.text[:500]}"
-        )
+        logging.error(f"[Graph] BOM list error for factory '{factory_key}': {e} | " f"body={resp.text[:500]}")
         return None
 
     items = resp.json().get("value", [])
     if not items:
-        logging.warning(
-            f"[Graph] BOM folder is empty for factory '{factory_key}', "
-            f"date '{jp_folder_name}'"
-        )
+        logging.warning(f"[Graph] BOM folder is empty for factory '{factory_key}', " f"date '{jp_folder_name}'")
         return None
 
     dest_root = Path(base_dir) / "BOM" / jp_folder_name
@@ -175,19 +145,14 @@ def download_factory_bom_for_date(
 
         name = it.get("name", "")
         # only BOM-related formats
-        if not any(
-            name.lower().endswith(ext)
-            for ext in (".xlsx", ".xlsm", ".xls", ".pdf", ".csv")
-        ):
+        if not any(name.lower().endswith(ext) for ext in (".xlsx", ".xlsm", ".xls", ".pdf", ".csv")):
             continue
 
         drive_id = it["parentReference"]["driveId"]
         file_id = it["id"]
         dl_url = f"{BASE_URL}/drives/{drive_id}/items/{file_id}/content"
 
-        logging.info(
-            f"[Graph] Downloading BOM file for '{factory_key}': {name}"
-        )
+        logging.info(f"[Graph] Downloading BOM file for '{factory_key}': {name}")
         try:
             r = requests.get(dl_url, headers=headers, stream=True)
             r.raise_for_status()
@@ -207,10 +172,10 @@ def download_factory_bom_for_date(
         count += 1
 
     logging.info(
-        f"[Graph] BOM download finished for factory '{factory_key}' — "
-        f"{count} files saved under: {dest_root}"
+        f"[Graph] BOM download finished for factory '{factory_key}' — " f"{count} files saved under: {dest_root}"
     )
     return dest_root if count > 0 else None
+
 
 # ---------------------------------------------------------------------------
 # 配車表 (大阪) downloader — same Graph /shares style, different folder
@@ -221,9 +186,9 @@ def download_factory_bom_for_date(
 # ---------------------------------------------------------------------------
 
 OSAKA_HAISHA_SHARE_URL_TEMPLATE = (
-    "https://nskkogyo.sharepoint.com/sites/yanase/"
-    "Shared Documents/大阪工場　製造データ/{date}"
+    "https://nskkogyo.sharepoint.com/sites/yanase/" "Shared Documents/大阪工場　製造データ/{date}"
 )
+
 
 def download_osaka_haisha_for_date(jp_folder_name: str, base_dir: Path) -> Path | None:
     """
@@ -284,8 +249,8 @@ def download_osaka_haisha_for_date(jp_folder_name: str, base_dir: Path) -> Path 
             continue
 
         drive_id = it["parentReference"]["driveId"]
-        file_id  = it["id"]
-        dl_url   = f"{BASE_URL}/drives/{drive_id}/items/{file_id}/content"
+        file_id = it["id"]
+        dl_url = f"{BASE_URL}/drives/{drive_id}/items/{file_id}/content"
 
         logging.info(f"[Graph] Downloading 配車表 (大阪): {name}")
         try:
@@ -293,9 +258,7 @@ def download_osaka_haisha_for_date(jp_folder_name: str, base_dir: Path) -> Path 
             r.raise_for_status()
         except Exception as e:
             body = getattr(r, "text", "")[:200] if "r" in locals() else ""
-            logging.error(
-                f"[Graph] 配車表 download failed for {name} (大阪): {e} | body={body}"
-            )
+            logging.error(f"[Graph] 配車表 download failed for {name} (大阪): {e} | body={body}")
             continue
 
         out_path = dest_root / name
@@ -308,20 +271,18 @@ def download_osaka_haisha_for_date(jp_folder_name: str, base_dir: Path) -> Path 
 
     if count == 0:
         logging.warning(
-            f"[Graph] 配車表 not found (no matching Excel with '配車') "
-            f"for 大阪, date '{jp_folder_name}'"
+            f"[Graph] 配車表 not found (no matching Excel with '配車') " f"for 大阪, date '{jp_folder_name}'"
         )
         return None
 
-    logging.info(
-        f"[Graph] 配車表 download finished for 大阪 — {count} file(s) saved under: {dest_root}"
-    )
+    logging.info(f"[Graph] 配車表 download finished for 大阪 — {count} file(s) saved under: {dest_root}")
     return dest_root
 
+
 TOCHIGI_HAISHA_SHARE_URL_TEMPLATE = (
-    "https://nskkogyo.sharepoint.com/sites/mouka/"
-    "Shared Documents/真岡工場　製造データ/{date}"
+    "https://nskkogyo.sharepoint.com/sites/mouka/" "Shared Documents/真岡工場　製造データ/{date}"
 )
+
 
 def download_tochigi_haisha_for_date(jp_folder_name: str, base_dir: Path) -> Path | None:
     """
@@ -359,7 +320,7 @@ def download_tochigi_haisha_for_date(jp_folder_name: str, base_dir: Path) -> Pat
         name = it.get("name", "")
         lower = name.lower()
 
-        # SAME RULE AS OSAKA — 必ず "配車" + excel 
+        # SAME RULE AS OSAKA — 必ず "配車" + excel
         if "配車" not in name:
             continue
         if not (lower.endswith(".xls") or lower.endswith(".xlsx")):
@@ -404,6 +365,7 @@ def download_osaka_bom_for_date(jp_folder_name: str, base_dir: Path) -> Path | N
     """
     return download_factory_bom_for_date("大阪", jp_folder_name, base_dir)
 
+
 def upload_usb_to_tochigi_date(jp_date: str, usb_folder: Path) -> int:
     """
     Uploads the local ▽USB folder contents into:
@@ -425,10 +387,9 @@ def upload_usb_to_tochigi_date(jp_date: str, usb_folder: Path) -> int:
         return 0
 
     # --- TARGET ROOT ---
-    target_url = (
-        "https://nskkogyo.sharepoint.com/sites/mouka/"
-        "Shared Documents/真岡工場　製造データ/{date}"
-    ).format(date=jp_date)
+    target_url = ("https://nskkogyo.sharepoint.com/sites/mouka/" "Shared Documents/真岡工場　製造データ/{date}").format(
+        date=jp_date
+    )
 
     logging.info(f"[Graph] Tochigi upload target = {target_url}")
 
@@ -437,15 +398,9 @@ def upload_usb_to_tochigi_date(jp_date: str, usb_folder: Path) -> int:
     headers = {"Authorization": f"Bearer {token}"}
 
     # Resolve DATE folder driveItem
-    resp = requests.get(
-        f"{GRAPH_BASE_URL}/shares/{share_id}/driveItem",
-        headers=headers
-    )
+    resp = requests.get(f"{GRAPH_BASE_URL}/shares/{share_id}/driveItem", headers=headers)
     if not resp.ok:
-        logging.error(
-            f"[Tochigi Upload] Failed to resolve date folder: "
-            f"{resp.status_code} {resp.text}"
-        )
+        logging.error(f"[Tochigi Upload] Failed to resolve date folder: " f"{resp.status_code} {resp.text}")
         return 0
 
     info = resp.json()
@@ -456,7 +411,7 @@ def upload_usb_to_tochigi_date(jp_date: str, usb_folder: Path) -> int:
     uploaded = 0
 
     # Iterate through ▽USB/*  (truck folders)
-    for root, dirs, files in os.walk(usb_folder):
+    for root, _, files in os.walk(usb_folder):
         rel_root = Path(root).relative_to(usb_folder)
 
         for fname in files:
@@ -468,14 +423,9 @@ def upload_usb_to_tochigi_date(jp_date: str, usb_folder: Path) -> int:
                 # A file directly inside ▽USB (rare but supported)
                 remote_rel = fname
             else:
-                remote_rel = str(
-                    PurePosixPath(rel_root.as_posix()) / fname
-                )
+                remote_rel = str(PurePosixPath(rel_root.as_posix()) / fname)
 
-            put_url = (
-                f"{GRAPH_BASE_URL}/drives/{drive_id}/items/"
-                f"{date_folder_id}:/{remote_rel}:/content"
-            )
+            put_url = f"{GRAPH_BASE_URL}/drives/{drive_id}/items/" f"{date_folder_id}:/{remote_rel}:/content"
 
             try:
                 with open(local_path, "rb") as f:
@@ -483,19 +433,11 @@ def upload_usb_to_tochigi_date(jp_date: str, usb_folder: Path) -> int:
 
                 if put_resp.status_code in (200, 201):
                     uploaded += 1
-                    logging.info(
-                        f"[Tochigi Upload] OK → {remote_rel}"
-                    )
+                    logging.info(f"[Tochigi Upload] OK → {remote_rel}")
                 else:
-                    logging.error(
-                        f"[Tochigi Upload] FAILED {remote_rel}: "
-                        f"{put_resp.status_code} {put_resp.text}"
-                    )
+                    logging.error(f"[Tochigi Upload] FAILED {remote_rel}: " f"{put_resp.status_code} {put_resp.text}")
             except Exception as e:
-                logging.error(
-                    f"[Tochigi Upload] Exception for {remote_rel}: {e}"
-                )
+                logging.error(f"[Tochigi Upload] Exception for {remote_rel}: {e}")
 
     logging.info(f"[Tochigi Upload] DONE → {uploaded} file(s)")
     return uploaded
-

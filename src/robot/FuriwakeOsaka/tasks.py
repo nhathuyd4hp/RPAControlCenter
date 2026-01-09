@@ -1,10 +1,14 @@
+import shutil
 import subprocess
 import sys
 import typing
 from datetime import datetime
 from pathlib import Path
-from src.service import ResultService as minio
+
 from celery import shared_task
+
+from src.core.config import settings
+from src.service import ResultService as minio
 
 
 @shared_task(bind=True, name="Furiwake Osaka")
@@ -40,3 +44,18 @@ def FuriwakeOsaka(
             encoding="utf-8",
         )
         process.wait()
+
+    result_dir = exe_path.parent / "Results"
+    files = list(result_dir.iterdir())
+    result_path: Path = files[0]
+
+    result = minio.fput_object(
+        bucket_name=settings.MINIO_BUCKET,
+        object_name=f"FuriwakeOsaka/{self.request.id}/{self.request.id}.xlsx",
+        file_path=result_path,
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    )
+
+    shutil.rmtree(result_dir)
+
+    return result.object_name
