@@ -34,22 +34,22 @@ def main(self):
             io=database_path,
             sheet_name="メール",
         )
-    database = database[
-        (pd.notna(database["案件番号"])) & (pd.notna(database["得意先名"])) & (pd.notna(database["物件名"]))
-    ]
-    database["CC先"] = database["CC先"].replace(0, pd.NA)
-    database["確定納期"] = pd.to_datetime(database["確定納期"], unit="d", origin="1899-12-30")
-    database["確定納期"] = database["確定納期"].apply(lambda x: f"{x.month}月{x.day}日" if pd.notna(x) else pd.NA)
+        database = database[
+            (pd.notna(database["案件番号"])) & (pd.notna(database["得意先名"])) & (pd.notna(database["物件名"]))
+        ]
+        database["CC先"] = database["CC先"].replace(0, pd.NA)
+        database["確定納期"] = pd.to_datetime(database["確定納期"], unit="d", origin="1899-12-30")
+        database["確定納期"] = database["確定納期"].apply(lambda x: f"{x.month}月{x.day}日" if pd.notna(x) else pd.NA)
 
-    database.to_excel(database_path, index=False, sheet_name="メール")
+        database.to_excel(database_path, index=False, sheet_name="メール")
 
-    database = pd.read_excel(
-        io=database_path,
-        sheet_name="メール",
-        dtype={
-            "案件番号": int,
-        },
-    )
+        database = pd.read_excel(
+            io=database_path,
+            sheet_name="メール",
+            dtype={
+                "案件番号": int,
+            },
+        )
 
     with sync_playwright() as p:
         browser = p.chromium.launch(
