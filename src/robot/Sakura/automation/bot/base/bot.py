@@ -15,8 +15,8 @@ from .meta import IBotMeta
 class IBot(ABC, metaclass=IBotMeta):
     def __init__(
         self,
-        options: Options =webdriver.ChromeOptions(),
-        service: Service =webdriver.ChromeService(),
+        options: Options = webdriver.ChromeOptions(),
+        service: Service = webdriver.ChromeService(),
         keep_alive: bool = False,
         timeout: float = 5,
         retry_interval: float = 0.5,
@@ -40,9 +40,7 @@ class IBot(ABC, metaclass=IBotMeta):
         self.logger = logging.getLogger(log_name)
         self.root_window = self.browser.window_handles[0]
         self.authenticated = False
-        self.download_directory = self.options.experimental_options.get(
-            "prefs", {}
-        ).get(
+        self.download_directory = self.options.experimental_options.get("prefs", {}).get(
             "download.default_directory",
             os.path.join(os.path.expanduser("~"), "downloads"),
         )
@@ -53,12 +51,13 @@ class IBot(ABC, metaclass=IBotMeta):
             self.browser.quit()
         except Exception:
             pass
+
     def __enter__(self):
         return self
-    
+
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.browser.quit()
-        
+
     def navigate(self, url, wait_for_complete: bool = True):
         time.sleep(self.retry_interval)
         self.browser.execute_script("window.stop()")
@@ -66,9 +65,7 @@ class IBot(ABC, metaclass=IBotMeta):
         self.browser.get(url)
         time.sleep(self.retry_interval)
         if wait_for_complete:
-            while (
-                self.browser.execute_script("return document.readyState") != "complete"
-            ):
+            while self.browser.execute_script("return document.readyState") != "complete":
                 time.sleep(self.retry_interval)
         time.sleep(self.retry_interval)
 
@@ -86,9 +83,7 @@ class IBot(ABC, metaclass=IBotMeta):
     def wait_for_download_to_start(self) -> list[str]:
         while True:
             downloading_files = [
-                filename
-                for filename in os.listdir(self.download_directory)
-                if filename.endswith(".crdownload")
+                filename for filename in os.listdir(self.download_directory) if filename.endswith(".crdownload")
             ]
             if downloading_files:
                 return downloading_files

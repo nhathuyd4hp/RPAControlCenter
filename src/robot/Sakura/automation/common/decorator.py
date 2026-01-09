@@ -24,8 +24,8 @@ def retry_if_exception(
         @functools.wraps(func)
         def method(self, *args, **kwargs) -> Any:
             logger: logging.Logger = (
-                getattr(self, "logger")
-                if hasattr(self, "logger") and isinstance(getattr(self,'logger'),logging.Logger)
+                self.logger
+                if hasattr(self, "logger") and isinstance(self.logger, logging.Logger)
                 else logging.getLogger()
             )
             retries = 0
@@ -36,9 +36,7 @@ def retry_if_exception(
                     retries += 1
                     if retries > max_retries:
                         msg = e.msg if hasattr(e, "msg") else str(e)
-                        logger.error(
-                            f"{func.__name__} failed after {max_retries} retries: {msg}"
-                        )
+                        logger.error(f"{func.__name__} failed after {max_retries} retries: {msg}")
                         return failure_return
                     logger.info(f"RETRY {func.__name__}")
                     time.sleep(delay)

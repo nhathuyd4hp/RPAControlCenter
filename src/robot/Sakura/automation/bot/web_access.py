@@ -6,9 +6,11 @@ from typing import List
 from urllib.parse import urljoin
 
 import pandas as pd
-from selenium.common.exceptions import (ElementClickInterceptedException,
-                                        StaleElementReferenceException,
-                                        TimeoutException)
+from selenium.common.exceptions import (
+    ElementClickInterceptedException,
+    StaleElementReferenceException,
+    TimeoutException,
+)
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.remote.webelement import WebElement
@@ -34,13 +36,8 @@ class WebAccessMeta(IBotMeta):
         def wrapper(self, *args, **kwargs):
             if not self.authenticated:
                 raise ConnectionRefusedError("Yêu cầu xác thực")
-            if (
-                self.browser.current_url.endswith(".com/")
-                or self.browser.current_url == "data:,"
-            ):
-                self.authenticated = self._authentication(
-                    self._username, self._password
-                )
+            if self.browser.current_url.endswith(".com/") or self.browser.current_url == "data:,":
+                self.authenticated = self._authentication(self._username, self._password)
             return func(self, *args, **kwargs)
 
         return wrapper
@@ -69,16 +66,16 @@ class WebAccess(IBot, metaclass=WebAccessMeta):
     def _authentication(self, username: str, password: str) -> bool:
         self.navigate(self.url)
         self.wait.until(
-            method = EC.element_to_be_clickable((By.CSS_SELECTOR, "input[type='text']")),
-            message= "Không tìm thấy usernameField",
+            method=EC.element_to_be_clickable((By.CSS_SELECTOR, "input[type='text']")),
+            message="Không tìm thấy usernameField",
         ).send_keys(username)
         self.wait.until(
-            method  = EC.element_to_be_clickable((By.CSS_SELECTOR, "input[type='password']")),
-            message = "Không tìm thấy passwordField",
+            method=EC.element_to_be_clickable((By.CSS_SELECTOR, "input[type='password']")),
+            message="Không tìm thấy passwordField",
         ).send_keys(password)
         self.wait.until(
-            method  = EC.element_to_be_clickable((By.CSS_SELECTOR, "button[class='btn login']")),
-            message = "Không tìm thấy loginButton",
+            method=EC.element_to_be_clickable((By.CSS_SELECTOR, "button[class='btn login']")),
+            message="Không tìm thấy loginButton",
         ).click()
         try:
             error_box = self.wait.until(
@@ -100,18 +97,14 @@ class WebAccess(IBot, metaclass=WebAccessMeta):
     def modify(self, case_number: int, **kwargs) -> bool:
         self.logger.info(f"Update {case_number}: {kwargs}")
         # --- Redirect --- #
-        f_menus = self.wait.until(
-            EC.presence_of_element_located((By.CSS_SELECTOR, "div[id='f-menus']"))
-        )
+        f_menus = self.wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "div[id='f-menus']")))
         if order_list := f_menus.find_elements(By.CSS_SELECTOR, "a[title='受注一覧']"):
             href = order_list[0].get_attribute("href")
             self.navigate(href)
         else:
             raise Exception("Can't find order view")
         # Clear
-        clear_btn = self.wait.until(
-            EC.presence_of_element_located((By.CSS_SELECTOR, "button[type='reset']"))
-        )
+        clear_btn = self.wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "button[type='reset']")))
         self.browser.execute_script(
             "arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});",
             clear_btn,
@@ -120,9 +113,7 @@ class WebAccess(IBot, metaclass=WebAccessMeta):
         self.wait.until(EC.element_to_be_clickable(clear_btn)).click()
         # Input Case Number
         case_number_td = self.wait.until(
-            EC.presence_of_element_located(
-                (By.XPATH, "//th[span[text()='案件番号']]/following-sibling::td")
-            )
+            EC.presence_of_element_located((By.XPATH, "//th[span[text()='案件番号']]/following-sibling::td"))
         )
         self.browser.execute_script(
             "arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});",
@@ -132,15 +123,11 @@ class WebAccess(IBot, metaclass=WebAccessMeta):
         input_field = case_number_td.find_element(By.TAG_NAME, "input")
         self.wait.until(EC.element_to_be_clickable(input_field)).send_keys(case_number)
         # Search
-        self.wait.until(
-            EC.element_to_be_clickable((By.CSS_SELECTOR, "button[type='submit']"))
-        ).click()
+        self.wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "button[type='submit']"))).click()
         time.sleep(self.retry_interval)
         while self.browser.execute_script("return document.readyState") != "complete":
             time.sleep(self.retry_interval)
-        table = self.wait.until(
-            EC.presence_of_element_located((By.CSS_SELECTOR, "table[id='orderlist']"))
-        )
+        table = self.wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "table[id='orderlist']")))
         # Data in tbody
         tbody = table.find_element(By.TAG_NAME, "tbody")
         trs = tbody.find_elements(By.TAG_NAME, "tr")
@@ -172,11 +159,9 @@ class WebAccess(IBot, metaclass=WebAccessMeta):
             # --- Update Web Access --- #
             for key in kwargs.keys():
                 try:
-                    ths = self.wait.until(
-                        EC.presence_of_all_elements_located(
-                            (By.XPATH, f"//th[text()='{key}']")
-                        )
-                    )[:len(kwargs.get(key,None))]
+                    ths = self.wait.until(EC.presence_of_all_elements_located((By.XPATH, f"//th[text()='{key}']")))[
+                        : len(kwargs.get(key, None))
+                    ]
                     for insert_index, th in enumerate(ths):
                         self.browser.execute_script(
                             "arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});",
@@ -187,117 +172,71 @@ class WebAccess(IBot, metaclass=WebAccessMeta):
                         tbody = table.find_element(By.TAG_NAME, "tbody")
                         start_index = None  # Cột Header
                         end_index = None  # Cột Header Tiếp theo
-                        for index, tr in enumerate(
-                            tbody.find_elements(By.TAG_NAME, "tr")
-                        ):
+                        for index, tr in enumerate(tbody.find_elements(By.TAG_NAME, "tr")):
                             if tr.find_elements(By.XPATH, f".//th[text()='{key}']"):
                                 start_index = index
                                 break
                         if start_index is None:
                             raise LookupError("Không tìm được vị trí dòng dữ liệu!")
-                        for index, tr in enumerate(
-                            tbody.find_elements(By.TAG_NAME, "tr")[start_index + 1 :]
-                        ):
+                        for index, tr in enumerate(tbody.find_elements(By.TAG_NAME, "tr")[start_index + 1 :]):
                             if tr.find_elements(By.CSS_SELECTOR, "th[class='c']"):
                                 end_index = index + start_index + 1
                                 break
-                        table = tbody.find_elements(By.TAG_NAME, "tr")[
-                            start_index:end_index
-                        ]
+                        table = tbody.find_elements(By.TAG_NAME, "tr")[start_index:end_index]
                         header = table[0]
                         pos_index = None
-                        for index, column in enumerate(
-                            header.find_elements(By.TAG_NAME, "th")
-                        ):
+                        for index, column in enumerate(header.find_elements(By.TAG_NAME, "th")):
                             if column.text == key:
                                 pos_index = index
                                 break
                         if pos_index is None:
                             raise LookupError("No Data Column")
-                        for tr in tbody.find_elements(By.TAG_NAME, "tr")[
-                            start_index + 1 : end_index
-                        ]:
+                        for tr in tbody.find_elements(By.TAG_NAME, "tr")[start_index + 1 : end_index]:
                             td = tr.find_elements(By.TAG_NAME, "td")[pos_index]
-                            input_field = td.find_element(
-                                By.XPATH, ".//input | .//select"
-                            )
-                            self.wait.until(
-                                EC.element_to_be_clickable(input_field)
-                            ).click()
+                            input_field = td.find_element(By.XPATH, ".//input | .//select")
+                            self.wait.until(EC.element_to_be_clickable(input_field)).click()
                             self.browser.execute_script(
                                 "arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});",
                                 input_field,
                             )
                             time.sleep(self.retry_interval)
                             if input_field.tag_name == "input":
-                                if (
-                                    kwargs[key][insert_index].get("mode")
-                                    == "replace"
-                                ):
+                                if kwargs[key][insert_index].get("mode") == "replace":
                                     input_field.clear()
-                                    insert_data = kwargs[key][insert_index].get(
-                                        "data"
-                                    )
+                                    insert_data = kwargs[key][insert_index].get("data")
                                     input_field.send_keys(insert_data)
                                     input_field.send_keys(Keys.ENTER)
-                                if (
-                                    kwargs[key][insert_index].get("mode")
-                                    == "append"
-                                ):
+                                if kwargs[key][insert_index].get("mode") == "append":
                                     input_field.click()
-                                    insert_data = (
-                                        f" {kwargs[key][insert_index].get('data')}"
-                                    )
-                                    if not input_field.get_attribute("value").endswith(
-                                        insert_data
-                                    ):
+                                    insert_data = f" {kwargs[key][insert_index].get('data')}"
+                                    if not input_field.get_attribute("value").endswith(insert_data):
                                         input_field.send_keys(insert_data)
                                         input_field.send_keys(Keys.ENTER)
-                                if (
-                                    kwargs[key][insert_index].get("mode")
-                                    == "insert"
-                                ):
+                                if kwargs[key][insert_index].get("mode") == "insert":
                                     input_field.click()
                                     input_field.send_keys(Keys.HOME)
-                                    insert_data = (
-                                        f"{kwargs[key][insert_index].get('data')} "
-                                    )
-                                    if not input_field.get_attribute("value").startswith(
-                                        insert_data
-                                    ):
+                                    insert_data = f"{kwargs[key][insert_index].get('data')} "
+                                    if not input_field.get_attribute("value").startswith(insert_data):
                                         input_field.send_keys(insert_data)
                                         input_field.send_keys(Keys.ENTER)
                             elif input_field.tag_name == "select":
                                 select = Select(input_field)
-                                select.select_by_visible_text(
-                                    kwargs[key][insert_index].get("data")
-                                )
+                                select.select_by_visible_text(kwargs[key][insert_index].get("data"))
                 except TimeoutException:
                     pass
             time.sleep(self.retry_interval)
-            update_btn = self.wait.until(
-                EC.presence_of_element_located(
-                    (By.CSS_SELECTOR, "button[id='order_update']")
-                )
-            )
+            update_btn = self.wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "button[id='order_update']")))
             self.browser.execute_script("window.scrollTo(0, 0);")
             time.sleep(self.retry_interval * 2)
             self.wait.until(EC.element_to_be_clickable(update_btn)).click()
             time.sleep(self.retry_interval)
-            while (
-                self.browser.execute_script("return document.readyState") != "complete"
-            ):
+            while self.browser.execute_script("return document.readyState") != "complete":
                 time.sleep(self.retry_interval)
-            notice = self.wait.until(
-                EC.presence_of_element_located(
-                    (By.CSS_SELECTOR, "div[id='f-notice-box']")
-                )
-            )
+            notice = self.wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "div[id='f-notice-box']")))
             self.logger.info(f"Update Case: {case_number}: {repr(notice.text)}")
             if notice.text != "案件情報を更新しました。\n閉じる":
                 return False
         return True
-
 
     @retry_if_exception(
         exceptions=(
@@ -312,12 +251,10 @@ class WebAccess(IBot, metaclass=WebAccessMeta):
         self,
         building_name: str | None = None,
         drawing: list[str] | None = None,
-        delivery_date: list[str] = [date.today().strftime("%Y/%m/%d"), ""],
+        delivery_date: list[str] = [date.today().strftime("%Y/%m/%d"), ""],  # noqa
         fields: list[str] | None = None,
     ) -> pd.DataFrame:
-        f_menus = self.wait.until(
-            EC.presence_of_element_located((By.CSS_SELECTOR, "div[id='f-menus']"))
-        )
+        f_menus = self.wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "div[id='f-menus']")))
         if order_list := f_menus.find_elements(By.CSS_SELECTOR, "a[title='受注一覧']"):
             href = order_list[0].get_attribute("href")
             self.navigate(href)
@@ -325,27 +262,17 @@ class WebAccess(IBot, metaclass=WebAccessMeta):
             self.logger.error("Can't find Order List")
             return pd.DataFrame()
         # Clear
-        self.wait.until(
-            EC.presence_of_element_located((By.CSS_SELECTOR, "button[type='reset']"))
-        )
-        self.wait.until(
-            EC.element_to_be_clickable((By.CSS_SELECTOR, "button[type='reset']"))
-        ).click()
+        self.wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "button[type='reset']")))
+        self.wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "button[type='reset']"))).click()
         # Filter
         if building_name:
             time.sleep(1)
-            self.wait.until(
-                EC.element_to_be_clickable(
-                    (By.ID, "select2-search_builder_cd-container")
-                )
-            ).click()
+            self.wait.until(EC.element_to_be_clickable((By.ID, "select2-search_builder_cd-container"))).click()
             time.sleep(1)
             self.wait.until(
-                EC.element_to_be_clickable(
-                    (By.CSS_SELECTOR, 'input[class="select2-search__field"]')
-                )
+                EC.element_to_be_clickable((By.CSS_SELECTOR, 'input[class="select2-search__field"]'))
             ).send_keys(building_name)
-            options: List[WebElement]= self.wait.until(
+            options: List[WebElement] = self.wait.until(
                 EC.presence_of_all_elements_located((By.CSS_SELECTOR, "ul#select2-search_builder_cd-results > li"))
             )
             if len(options) > 1:
@@ -361,51 +288,35 @@ class WebAccess(IBot, metaclass=WebAccessMeta):
         if delivery_date:  # Delivery date
             self.logger.info(f"確定納品日: {delivery_date[0]} ~ {delivery_date[1]}")
             self.wait.until(
-                EC.presence_of_element_located(
-                    (By.CSS_SELECTOR, 'input[name="search_fix_deliver_date_from"]')
-                )
+                EC.presence_of_element_located((By.CSS_SELECTOR, 'input[name="search_fix_deliver_date_from"]'))
             ).clear()
             self.wait.until(
-                EC.presence_of_element_located(
-                    (By.CSS_SELECTOR, 'input[name="search_fix_deliver_date_from"]')
-                )
+                EC.presence_of_element_located((By.CSS_SELECTOR, 'input[name="search_fix_deliver_date_from"]'))
             ).send_keys(delivery_date[0])
             self.wait.until(
                 EC.presence_of_element_located((By.CSS_SELECTOR, 'input[name="search_fix_deliver_date_to"]'))
             ).clear()
             self.wait.until(
-                EC.presence_of_element_located(
-                    (By.CSS_SELECTOR, 'input[name="search_fix_deliver_date_to"]')
-                )
+                EC.presence_of_element_located((By.CSS_SELECTOR, 'input[name="search_fix_deliver_date_to"]'))
             ).send_keys(delivery_date[1])
             self.wait.until(
-                EC.presence_of_element_located(
-                    (By.CSS_SELECTOR, 'input[name="search_fix_deliver_date_to"]')
-                )
+                EC.presence_of_element_located((By.CSS_SELECTOR, 'input[name="search_fix_deliver_date_to"]'))
             ).send_keys(Keys.ESCAPE)
         if drawing:  # Drawing
             self.logger.info(f"Filter Drawing: {drawing}")
+            self.wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "button[id='search_drawing_type_ms']")))
             self.wait.until(
-                EC.presence_of_element_located((By.CSS_SELECTOR, "button[id='search_drawing_type_ms']"))
-            )
-            self.wait.until(
-                EC.element_to_be_clickable(
-                    (By.CSS_SELECTOR, "button[id='search_drawing_type_ms']")
-                )
+                EC.element_to_be_clickable((By.CSS_SELECTOR, "button[id='search_drawing_type_ms']"))
             ).click()
             for e in drawing:
                 xpath = f"//span[text()='{e}']"
                 self.wait.until(EC.presence_of_element_located((By.XPATH, xpath)))
                 self.wait.until(EC.element_to_be_clickable((By.XPATH, xpath))).click()
             self.wait.until(
-                EC.element_to_be_clickable(
-                    (By.CSS_SELECTOR, "button[id='search_drawing_type_ms']")
-                )
+                EC.element_to_be_clickable((By.CSS_SELECTOR, "button[id='search_drawing_type_ms']"))
             ).send_keys(Keys.ESCAPE)
         # Search
-        submit_btn = self.wait.until(
-            EC.presence_of_element_located((By.CSS_SELECTOR, "button[type='submit']"))
-        )
+        submit_btn = self.wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "button[type='submit']")))
         self.browser.execute_script(
             "arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});",
             submit_btn,
@@ -417,9 +328,7 @@ class WebAccess(IBot, metaclass=WebAccessMeta):
             time.sleep(self.retry_interval)
         # Download File
         download_btn = self.wait.until(
-            EC.element_to_be_clickable(
-                (By.CSS_SELECTOR, "a[class='button fa fa-download']")
-            )
+            EC.element_to_be_clickable((By.CSS_SELECTOR, "a[class='button fa fa-download']"))
         )
         self.browser.execute_script(
             "arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});",
@@ -435,12 +344,12 @@ class WebAccess(IBot, metaclass=WebAccessMeta):
             raise NotImplementedError(f"Lấy danh sách đơn hàng thất bại: {tag}")
         file_path = os.path.join(self.download_directory, file_name)
         try:
-            df = pd.read_csv(file_path, encoding="CP932",low_memory=False)
+            df = pd.read_csv(file_path, encoding="CP932", low_memory=False)
         except UnicodeDecodeError:
-            df = pd.read_csv(file_path,low_memory=False)
+            df = pd.read_csv(file_path, low_memory=False)
         df = df[fields] if fields else df
         os.remove(file_path)
         return df
 
 
-__all__ = ['WebAccess']
+__all__ = ["WebAccess"]

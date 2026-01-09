@@ -44,7 +44,7 @@ options.add_experimental_option(
 )
 
 
-def main():
+def main(output: str):
     # From To
     to_date = datetime.now().replace(day=20)
     if to_date.month == 1:
@@ -130,7 +130,7 @@ def main():
     # Save
     excel_file = f"{datetime.today().strftime('%Y-%m-%d_%H-%M-%S')}.xlsx"
     data.to_excel(
-        excel_file,
+        os.path.join(output, excel_file),
         index=False,
     )
     try:
@@ -159,7 +159,7 @@ def main():
             border.Weight = 2
             border.ColorIndex = 0
         wb.save()
-        pdfFile = f"さくら建設　鋼製野縁納材報告（{from_date} - {to_date}).pdf".replace("/", "-")
+        pdfFile = os.path.join(output, f"さくら建設　鋼製野縁納材報告（{from_date} - {to_date}).pdf".replace("/", "-"))
         # ---- Export in one page #
         sheet.api.PageSetup.Zoom = False
         sheet.api.PageSetup.FitToPagesWide = 1
@@ -168,7 +168,6 @@ def main():
     finally:
         wb.close()
         app.quit()
-        os.remove(excel_file)
         # with MailDealer(
         #     url = "https://mds3310.maildealer.jp/",
         #     username="vietnamrpa",
@@ -203,7 +202,7 @@ def main():
         #             os.path.abspath(pdfFile),
         #         ],
         #     )
-    return os.path.abspath(pdfFile)
+    return pdfFile
 
 
 @shared_task(

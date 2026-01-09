@@ -2,11 +2,12 @@ import os
 import re
 import time
 from typing import List, Tuple
-from urllib.parse import unquote
 
-from selenium.common.exceptions import (ElementClickInterceptedException,
-                                        StaleElementReferenceException,
-                                        TimeoutException)
+from selenium.common.exceptions import (
+    ElementClickInterceptedException,
+    StaleElementReferenceException,
+    TimeoutException,
+)
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
@@ -23,16 +24,14 @@ class SharePoint(IBot):
         if not self.authenticated:
             raise ConnectionRefusedError("The username or password is incorrect.")
 
-    def navigate(self, url, wait_for_complete = True):
+    def navigate(self, url, wait_for_complete=True):
         super().navigate(url, wait_for_complete)
         try:
             ms_error_header = self.wait.until(
-                EC.element_to_be_clickable((By.CSS_SELECTOR,"div[id='ms-error-header']"))
+                EC.element_to_be_clickable((By.CSS_SELECTOR, "div[id='ms-error-header']"))
             )
             self.logger.error(ms_error_header.text)
-            self.wait.until(
-                EC.element_to_be_clickable((By.CSS_SELECTOR,"div[id='ms-error'] a"))
-            ).click()
+            self.wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "div[id='ms-error'] a"))).click()
             time.sleep(self.retry_interval)
             while self.browser.execute_script("return document.readyState") != "complete":
                 continue
@@ -59,39 +58,29 @@ class SharePoint(IBot):
         # -- Username
         time.sleep(self.retry_interval)
         try:
-            self.wait.until(
-                EC.presence_of_element_located((By.CSS_SELECTOR, 'input[type="email"]'))
-            ).send_keys(username)
-            # -- Next
-            btn = self.wait.until(
-                EC.presence_of_element_located((By.ID, "idSIButton9"))
+            self.wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, 'input[type="email"]'))).send_keys(
+                username
             )
+            # -- Next
+            btn = self.wait.until(EC.presence_of_element_located((By.ID, "idSIButton9")))
             self.wait.until(EC.element_to_be_clickable(btn)).click()
             # -- Password
-            self.wait.until(
-                EC.element_to_be_clickable((By.CSS_SELECTOR, 'input[type="password"]'))
-            ).send_keys(password)
+            self.wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, 'input[type="password"]'))).send_keys(password)
             # -- Sign in
             self.wait.until(EC.element_to_be_clickable((By.ID, "idSIButton9"))).click()
         except TimeoutException:
-            alert = self.wait.until(
-                EC.presence_of_element_located((By.CSS_SELECTOR, "div[role='alert']"))
-            )
+            alert = self.wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "div[role='alert']")))
             self.logger.error(alert.text)
             return False
 
         try:  # Password Error
-            alert = self.wait.until(
-                EC.presence_of_element_located((By.CSS_SELECTOR, "div[role='alert']"))
-            )
+            alert = self.wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "div[role='alert']")))
             self.logger.error(alert.text)
             return False
         except TimeoutException:
             pass
         # -- Stay Signed In
-        self.wait.until(
-            EC.element_to_be_clickable((By.CSS_SELECTOR, "input[id='idSIButton9']"))
-        ).click()
+        self.wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "input[id='idSIButton9']"))).click()
         time.sleep(1)
         self.navigate(self.url)
         if self.browser.current_url.find(".sharepoint.com") == -1:
@@ -99,7 +88,6 @@ class SharePoint(IBot):
             return False
         self.logger.info("Authenticated")
         return True
- 
 
     @retry_if_exception(
         exceptions=(
@@ -107,9 +95,11 @@ class SharePoint(IBot):
             ElementClickInterceptedException,
             TimeoutException,
         ),
-        failure_return=[(None,None,"Download Error"),]
+        failure_return=[
+            (None, None, "Download Error"),
+        ],
     )
-    def download(self,site_url:str,file_pattern:str) -> List[Tuple[str | None,str,str]]:
+    def download(self, site_url: str, file_pattern: str) -> List[Tuple[str | None, str, str]]:
         self.logger.info(f"Search {file_pattern} - {site_url}")
         result = []
         self.navigate(site_url)
@@ -120,39 +110,41 @@ class SharePoint(IBot):
             time.sleep(self.retry_interval)
             gridcells = self.wait.until(
                 EC.any_of(
-                    EC.presence_of_all_elements_located((By.CSS_SELECTOR,"div[role='gridcell'][data-automationid='field-LinkFilename']")),
-                    EC.presence_of_all_elements_located((By.CSS_SELECTOR,"div[role='gridcell'][data-automation-key^='displayNameColumn']")),
+                    EC.presence_of_all_elements_located(
+                        (By.CSS_SELECTOR, "div[role='gridcell'][data-automationid='field-LinkFilename']")
+                    ),
+                    EC.presence_of_all_elements_located(
+                        (By.CSS_SELECTOR, "div[role='gridcell'][data-automation-key^='displayNameColumn']")
+                    ),
                 )
             )
             for gridcell in gridcells:
-                text = re.sub(r'[\ue000-\uf8ff]|\n|Press C to open file hover card', '', gridcell.text)
-                if re.match(step,text):
-                    button = gridcell.find_element(
-                        By.XPATH,
-                        './/button | .//span[@role="button"]'
-                    )
+                text = re.sub(r"[\ue000-\uf8ff]|\n|Press C to open file hover card", "", gridcell.text)
+                if re.match(step, text):
+                    button = gridcell.find_element(By.XPATH, './/button | .//span[@role="button"]')
                     self.wait.until(EC.element_to_be_clickable(button)).click()
                     time.sleep(self.timeout)
                     folder_found = True
                     break
-            time.sleep(self.retry_interval)  
+            time.sleep(self.retry_interval)
         if not folder_found:
             raise LookupError(f"Folder Not Found: {file_pattern}")
         # File
         file: str = file_pattern.split("/")[-1]
         gridcells = self.wait.until(
             EC.any_of(
-                EC.presence_of_all_elements_located((By.CSS_SELECTOR,"div[role='gridcell'][data-automationid='field-LinkFilename']")),
-                EC.presence_of_all_elements_located((By.CSS_SELECTOR,"div[role='gridcell'][data-automation-key^='displayNameColumn']")),
+                EC.presence_of_all_elements_located(
+                    (By.CSS_SELECTOR, "div[role='gridcell'][data-automationid='field-LinkFilename']")
+                ),
+                EC.presence_of_all_elements_located(
+                    (By.CSS_SELECTOR, "div[role='gridcell'][data-automation-key^='displayNameColumn']")
+                ),
             )
         )
         for gridcell in gridcells:
-            file_name = re.sub(r'[\ue000-\uf8ff]|\n|Press C to open file hover card', '', gridcell.text)
-            if re.match(file,file_name):
-                button = gridcell.find_element(
-                    By.XPATH,
-                    './/button | .//span[@role="button"]'
-                )
+            file_name = re.sub(r"[\ue000-\uf8ff]|\n|Press C to open file hover card", "", gridcell.text)
+            if re.match(file, file_name):
+                button = gridcell.find_element(By.XPATH, './/button | .//span[@role="button"]')
                 self.wait.until(EC.element_to_be_clickable(button))
                 time.sleep(self.retry_interval)
                 # Copy Link
@@ -160,15 +152,14 @@ class SharePoint(IBot):
                 # Download File
                 ActionChains(self.browser).context_click(button).perform()
                 download_btn = self.wait.until(
-                    EC.presence_of_element_located(
-                        (By.CSS_SELECTOR,"button[data-automationid='downloadCommand']")
-                    )
+                    EC.presence_of_element_located((By.CSS_SELECTOR, "button[data-automationid='downloadCommand']"))
                 )
                 self.wait.until(EC.element_to_be_clickable(download_btn)).click()
                 time.sleep(2.5)
                 file_path, status = self.wait_for_download_to_finish()
                 self.logger.info(f"Download {file_name}: {file_path if not status else status},")
-                result.append((link,os.path.join(self.download_directory,file_path),status))
+                result.append((link, os.path.join(self.download_directory, file_path), status))
         return result
-    
+
+
 __all__ = ["SharePoint"]
