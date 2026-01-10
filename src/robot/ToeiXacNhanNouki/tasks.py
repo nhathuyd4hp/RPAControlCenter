@@ -177,18 +177,32 @@ def run(
                                     except Exception as e:
                                         logger.error(e)
                                         pass
-                                    data.append(
-                                        [
-                                            row["案件番号"],
-                                            row["物件名"],
-                                            construction_id,
-                                            touei_endtime.strftime("%Y-%m-%d"),
-                                            web_access_endtime.strftime("%Y-%m-%d"),
-                                            0,
-                                            False,
-                                            "IGNORE",
-                                        ]
-                                    )
+                                    try:
+                                        data.append(
+                                            [
+                                                row["案件番号"],
+                                                row["物件名"],
+                                                construction_id,
+                                                touei_endtime.strftime("%Y-%m-%d"),
+                                                web_access_endtime.strftime("%Y-%m-%d"),
+                                                0,
+                                                False,
+                                                "IGNORE",
+                                            ]
+                                        )
+                                    except Exception:
+                                        data.append(
+                                            [
+                                                row["案件番号"],
+                                                row["物件名"],
+                                                construction_id,
+                                                touei_endtime,
+                                                web_access_endtime,
+                                                0,
+                                                False,
+                                                "IGNORE",
+                                            ]
+                                        )
                             continue
                     if construction.get("construction").startswith("神奈川施工"):
                         ignore_region = ["静岡県"]
@@ -204,18 +218,32 @@ def run(
                                         web_access_endtime = datetime.datetime.strptime(row["確定納期"], "%y/%m/%d")
                                     except Exception as e:
                                         logger.error(e)
-                                    data.append(
-                                        [
-                                            row["案件番号"],
-                                            row["物件名"],
-                                            construction_id,
-                                            touei_endtime.strftime("%Y-%m-%d"),
-                                            web_access_endtime.strftime("%Y-%m-%d") if web_access_endtime else None,
-                                            0,
-                                            False,
-                                            "IGNORE",
-                                        ]
-                                    )
+                                    try:
+                                        data.append(
+                                            [
+                                                row["案件番号"],
+                                                row["物件名"],
+                                                construction_id,
+                                                touei_endtime.strftime("%Y-%m-%d") if touei_endtime else None,
+                                                web_access_endtime.strftime("%Y-%m-%d") if web_access_endtime else None,
+                                                0,
+                                                False,
+                                                "IGNORE",
+                                            ]
+                                        )
+                                    except Exception:
+                                        data.append(
+                                            [
+                                                row["案件番号"],
+                                                row["物件名"],
+                                                construction_id,
+                                                touei_endtime,
+                                                web_access_endtime,
+                                                0,
+                                                False,
+                                                "IGNORE",
+                                            ]
+                                        )
                             continue
                     for index, 案件番号 in enumerate(web_access_information["案件番号"].to_list()):
                         result_一括操作 = mail_dealer.一括操作(
