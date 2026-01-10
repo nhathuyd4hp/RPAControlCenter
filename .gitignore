@@ -230,3 +230,4 @@ results/
 bin/
 Tesseract/
 *.pdf
+Access_token_log
