@@ -16,7 +16,7 @@ from xlwings.utils import col_name
 from src.core.config import settings
 from src.core.logger import Log
 from src.core.redis import REDIS_POOL
-from src.robot.Sakura.automation.bot import SharePoint, WebAccess
+from src.robot.Sakura.automation.bot import MailDealer, SharePoint, WebAccess
 from src.service import ResultService as minio
 
 # -- Chrome Options
@@ -175,13 +175,16 @@ def main(
             wb.close()
         if app:
             app.quit()
-        # with MailDealer(
-        #     url = "https://mds3310.maildealer.jp/",
-        #     username="vietnamrpa",
-        #     password="nsk159753",
-        #     log_name="MailDealer",
-        #     options=options,
-        # ) as mail_dealer:
+        logger.info("login mail dealer")
+        with MailDealer(
+            url="https://mds3310.maildealer.jp/",
+            username=settings.MAIL_DEALER_USERNAME,
+            password=settings.MAIL_DEALER_PASSWORD,
+            logger=logger,
+            options=options,
+        ):
+            logger.info("send_mail")
+            pass
         #     mail_dealer.send_mail(
         #         fr="kantou@nsk-cad.com",
         #         to="ikeda.k@jkenzai.com",
@@ -225,7 +228,7 @@ def Sakura(self):
         )
         result = minio.fput_object(
             bucket_name=settings.MINIO_BUCKET,
-            object_name=f"Sakura/{self.request.id}/{os.path.basename(pdfFile)}",
+            object_name=f"Sakura/{self.request.id}.pdf",
             file_path=pdfFile,
             content_type="application/pdf",
         )
