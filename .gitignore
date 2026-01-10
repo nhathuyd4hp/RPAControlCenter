@@ -229,3 +229,4 @@ results/
 *.xlsm
 bin/
 Tesseract/
+*.pdf
