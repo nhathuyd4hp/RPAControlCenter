@@ -1,9 +1,11 @@
 import shutil
 import subprocess
 from pathlib import Path
+
 from celery import shared_task
 
-@shared_task(bind=True,name="Keiai Nouki Irai")
+
+@shared_task(bind=True, name="Keiai Nouki Irai")
 def keiai_nouki_irai(self):
     exe_path = Path(__file__).resolve().parents[2] / "robot" / "KeiaiNoukiIrai" / "KISTAR_Nouki_V2_FItUkGg.5.exe"
     cwd_path = exe_path.parent
@@ -22,7 +24,7 @@ def keiai_nouki_irai(self):
         log_file.unlink()
     except Exception:
         pass
-    
+
     logs_folder = cwd_path / "Logs"
     access_token_folder = cwd_path / "Access_token"
     for path in (logs_folder, access_token_folder):
