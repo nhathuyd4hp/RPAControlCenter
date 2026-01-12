@@ -47,6 +47,9 @@ class Settings(BaseSettings):
     # TOUEI
     TOUEI_USERNAME: str
     TOUEI_PASSWORD: str
+    # ANDPAD
+    ANDPAD_USERNAME: str
+    ANDPAD_PASSWORD: str
     # API SHAREPOINT
     API_SHAREPOINT_TENANT_ID: str
     API_SHAREPOINT_CLIENT_ID: str
