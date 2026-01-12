@@ -27,7 +27,7 @@ def get_robots():
             robots.append(
                 {
                     "name": name,
-                    "active": True,
+                    "active": getattr(task, "active", True),
                     "parameters": [
                         {
                             "name": p.name,

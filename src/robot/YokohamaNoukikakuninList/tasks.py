@@ -1,9 +1,17 @@
 import shutil
-from celery import shared_task
 import subprocess
 from pathlib import Path
 
-@shared_task(bind=True,name="Yokohama Noukikakunin List")
+from celery import shared_task
+
+from src.core.inactive_task import InactiveTask
+
+
+@shared_task(
+    bind=True,
+    name="Yokohama Noukikakunin List",
+    base=InactiveTask,
+)
 def YokohamaNoukikakuninList(self):
     exe_path = Path(__file__).resolve().parents[2] / "robot" / "YokohamaNoukikakuninList" / "YokohamaKakunin_V2.0.exe"
     cwd_path = exe_path.parent
