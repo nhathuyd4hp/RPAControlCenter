@@ -1,3 +1,4 @@
+import os
 import subprocess
 from pathlib import Path
 
@@ -13,6 +14,31 @@ def GuiBanVeShuko(self):
     log_dir.mkdir(parents=True, exist_ok=True)
     log_file = log_dir / f"{self.request.id}.log"
 
-    with open(log_file, "w", encoding="utf-8", errors="ignore") as f:
-        process = subprocess.Popen([str(exe_path)], cwd=str(cwd_path), stdout=f, stderr=subprocess.STDOUT, text=True)
-        process.wait()
+    env = os.environ.copy()
+    env["PYTHONUNBUFFERED"] = "1"
+
+    with open(log_file, "a", encoding="utf-8") as f:
+        try:
+            process = subprocess.Popen(
+                [str(exe_path)],
+                cwd=str(cwd_path),
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                stdin=subprocess.DEVNULL,
+                env=env,
+                shell=True,
+            )
+
+            for line in iter(process.stdout.readline, b""):
+                try:
+                    decoded_line = line.decode("utf-8", errors="replace")
+                except Exception:
+                    decoded_line = str(line)
+
+                f.write(decoded_line)
+                f.flush()
+
+            process.wait()
+
+        except Exception as e:
+            f.write(f"\n[CRITICAL ERROR] Python subprocess failed: {str(e)}\n")
