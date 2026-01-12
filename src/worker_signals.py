@@ -52,7 +52,7 @@ def task_success_handler(sender=None, result=None, **kwargs):
         if not record:
             return
         record.status = Status.SUCCESS
-        record.result = str(result)
+        record.result = "" if result is None else str(result)
         session.add(record)
         session.commit()
         redis.Redis(connection_pool=REDIS_POOL).publish("CELERY", f"{record.robot} hoàn thành")

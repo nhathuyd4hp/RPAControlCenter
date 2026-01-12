@@ -4,6 +4,9 @@ from pathlib import Path
 
 from celery import shared_task
 
+from src.core.config import settings
+from src.service import ResultService as minio
+
 
 @shared_task(bind=True, name="Keiai Nouki Irai")
 def keiai_nouki_irai(self):
@@ -17,7 +20,6 @@ def keiai_nouki_irai(self):
     with open(log_file, "w", encoding="utf-8", errors="ignore") as f:
         process = subprocess.Popen([str(exe_path)], cwd=str(cwd_path), stdout=f, stderr=subprocess.STDOUT, text=True)
         process.wait()
-
     # Clean
     log_file = cwd_path / "Access_token_log"
     try:
@@ -29,3 +31,13 @@ def keiai_nouki_irai(self):
     access_token_folder = cwd_path / "Access_token"
     for path in (logs_folder, access_token_folder):
         shutil.rmtree(path, ignore_errors=True)
+    # Save Result
+    result_file = cwd_path / "Data.xlsx"
+    result = minio.fput_object(
+        bucket_name=settings.MINIO_BUCKET,
+        object_name=f"KeiaiNoukiIrai/{self.request.id}/Data.xlsx",
+        file_path=str(result_file),
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    )
+
+    return result.object_name

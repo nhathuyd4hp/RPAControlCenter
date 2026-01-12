@@ -1,8 +1,10 @@
-from celery import shared_task
 import subprocess
 from pathlib import Path
 
-@shared_task(bind=True,name="Gửi Bản Vẽ Shuko")
+from celery import shared_task
+
+
+@shared_task(bind=True, name="Gửi Bản Vẽ Shuko")
 def GuiBanVeShuko(self):
     exe_path = Path(__file__).resolve().parents[2] / "robot" / "GuiBanVeShuko" / "GuiBanVeShuko.exe"
     cwd_path = exe_path.parent
