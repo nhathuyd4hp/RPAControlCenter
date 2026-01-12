@@ -1,5 +1,6 @@
 from celery import Task
 
+
 class InactiveTask(Task):
     active: bool = False
 

@@ -22,3 +22,4 @@ from src.robot.CapNhatDienTichWebAccess import tasks  # noqa
 from src.robot.MejiIrisumiCheck import tasks  # noqa
 from src.robot.ShukoTaoSo import tasks  # noqa
 from src.robot.YokohamaNoukikakuninList import tasks  # noqa
+from src.robot.KeiaiShiryouKoushin import tasks  # noqa
