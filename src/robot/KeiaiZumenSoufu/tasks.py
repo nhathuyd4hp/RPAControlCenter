@@ -1,12 +1,14 @@
-import os
-from src.core.config import settings
 import shutil
 import subprocess
-from src.service import ResultService as minio
-from celery import shared_task
 from pathlib import Path
 
-@shared_task(bind=True,name="Keiai Zumen Soufu")
+from celery import shared_task
+
+from src.core.config import settings
+from src.service import ResultService as minio
+
+
+@shared_task(bind=True, name="Keiai Zumen Soufu")
 def keiai_zumen_soufu(self):
     exe_path = Path(__file__).resolve().parents[2] / "robot" / "KeiaiZumenSoufu" / "Kizuku_V1_1_2.exe"
     cwd_path = exe_path.parent
@@ -21,7 +23,7 @@ def keiai_zumen_soufu(self):
 
     access_token_file = cwd_path / "Access_token_log"
     bot_log_file = cwd_path / "bot_log.log"
-    
+
     try:
         access_token_file.unlink()
         bot_log_file.unlink()
