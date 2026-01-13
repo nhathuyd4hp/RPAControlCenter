@@ -1,3 +1,4 @@
+import glob
 import os
 import re
 import shutil
@@ -344,6 +345,10 @@ def tochigi(self, process_date: datetime | str):
                                 shutil.move(filepath, new_path)
                                 temp.append(new_path)
                         logger.info("Chạy macro")
+                        excel_files = glob.glob(os.path.join(excel_dir, "*"))
+                        for file_path in excel_files:
+                            if os.path.isfile(file_path):
+                                logger.info(f"File: {os.path.basename(file_path)}")
                         with FileLock(os.path.join("src/resource", "macro.lock"), timeout=300):
                             try:
                                 app = xw.App(visible=False)

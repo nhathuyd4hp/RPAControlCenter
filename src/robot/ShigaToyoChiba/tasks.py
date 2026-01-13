@@ -1,3 +1,4 @@
+import glob
 import os
 import re
 import shutil
@@ -387,6 +388,12 @@ def shiga_toyo_chiba(
                             if os.listdir(download_path) == ["excel", "pdf"]:
                                 break
                         logger.info("Run macro")
+                        excel_files = glob.glob(
+                            os.path.join(os.path.abspath(os.path.join(download_path, "excel")), "*")
+                        )
+                        for file_path in excel_files:
+                            if os.path.isfile(file_path):
+                                logger.info(f"File: {os.path.basename(file_path)}")
                         try:
                             with FileLock(os.path.join("src/resource", "macro.lock"), timeout=300):
                                 app = xw.App(visible=False)
