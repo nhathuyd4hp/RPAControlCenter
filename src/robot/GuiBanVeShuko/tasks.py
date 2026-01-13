@@ -29,16 +29,13 @@ def GuiBanVeShuko(self):
                 stderr=subprocess.STDOUT,
                 stdin=subprocess.DEVNULL,
                 env=env,
-                shell=True,
+                text=True,
+                encoding="utf-8",
+                bufsize=1,
             )
 
-            for line in iter(process.stdout.readline, b""):
-                try:
-                    decoded_line = line.decode("utf-8", errors="replace")
-                except Exception:
-                    decoded_line = str(line)
-
-                f.write(decoded_line)
+            for line in process.stdout:
+                f.write(line)
                 f.flush()
 
             process.wait()
