@@ -45,17 +45,25 @@ def FuriwakeOsaka(
         )
         process.wait()
 
+    # Clean
+    bom_dir = exe_path.parent / "BOM"
+    logs_dir = exe_path.parent / "Logs"
+    access_token_dir = exe_path.parent / "Access_token"
+    配車表_dir = exe_path.parent / "配車表"
+    shutil.rmtree(bom_dir)
+    shutil.rmtree(logs_dir)
+    shutil.rmtree(access_token_dir)
+    shutil.rmtree(配車表_dir)
+    # Upload result
     result_dir = exe_path.parent / "Results"
-    files = list(result_dir.iterdir())
-    result_path: Path = files[0]
-
+    files = [f for f in result_dir.iterdir() if f.is_file()]
+    if not files:
+        raise RuntimeError("Results folder is empty")
+    latest_file: Path = max(files, key=lambda f: f.stat().st_mtime)
     result = minio.fput_object(
         bucket_name=settings.MINIO_BUCKET,
         object_name=f"FuriwakeOsaka/{self.request.id}/{self.request.id}.xlsx",
-        file_path=result_path,
+        file_path=str(latest_file),
         content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     )
-
-    shutil.rmtree(result_dir)
-
     return result.object_name
