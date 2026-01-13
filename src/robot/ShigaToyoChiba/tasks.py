@@ -302,7 +302,7 @@ def shiga_toyo_chiba(
                                 data=[["Lỗi: kiểm tra cột 出荷工場"]],
                             )
                             break
-                        logger.info("Count data")
+                        logger.info("kiểm tra số lượng file")
                         # --- Kiểm tra số lượng file --- #
                         count_floor = len(row["階"].split(",")) if hasattr(row["階"], "split") else None
                         if count_floor is None:
@@ -387,7 +387,7 @@ def shiga_toyo_chiba(
                                     )
                             if os.listdir(download_path) == ["excel", "pdf"]:
                                 break
-                        logger.info("Run macro")
+                        logger.info("chạy macro")
                         excel_files = glob.glob(
                             os.path.join(os.path.abspath(os.path.join(download_path, "excel")), "*")
                         )
@@ -419,7 +419,7 @@ def shiga_toyo_chiba(
                             )
                             break
                         # --- Upload Data
-                        logger.info("Upload data")
+                        logger.info("up data")
                         upload_data = []
                         for dirpath, _, filenames in os.walk(download_path):
                             for filename in filenames:
