@@ -3,6 +3,7 @@ import logging
 import os
 from pathlib import Path
 
+from config_access_token import token_file  # noqa
 from dotenv import load_dotenv
 from Nasiwak import create_json_config
 
