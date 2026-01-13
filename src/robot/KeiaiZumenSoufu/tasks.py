@@ -38,7 +38,7 @@ def keiai_zumen_soufu(self):
     result_file = cwd_path / "Kizuku図面送付.xlsx"
     result = minio.fput_object(
         bucket_name=settings.MINIO_BUCKET,
-        object_name=f"KeiaiZumenSoufu/{self.request.id}/{self.request.id}.xlsx",
+        object_name=f"KeiaiZumenSoufu/{self.request.id}/Kizuku.xlsx",
         file_path=str(result_file),
         content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     )
