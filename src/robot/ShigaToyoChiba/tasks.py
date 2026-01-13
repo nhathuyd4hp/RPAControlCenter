@@ -260,7 +260,7 @@ def shiga_toyo_chiba(
                             data=[["Đang xử lí"]],
                         )
                         # Get breadcrumb
-                        logger.info("Get breadcrumb")
+                        logger.info("Kiểm tra tên thư mục")
                         url = row["資料リンク"]
                         breadcrumb = sp.get_breadcrumb(url)
                         if breadcrumb[-1].endswith("納材"):
