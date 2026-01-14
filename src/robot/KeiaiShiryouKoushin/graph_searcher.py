@@ -1,23 +1,12 @@
-
 import requests
-from token_manager import get_access_token
 from config import BASE_URL
+from token_manager import get_access_token
+
 
 def search_anken_folder(anken_number):
     search_url = f"{BASE_URL}/search/query"
-    payload = {
-        "requests": [
-            {
-                "entityTypes": ["driveItem"],
-                "query": {"queryString": anken_number},
-                "region": "JPN"
-            }
-        ]
-    }
-    headers = {
-        "Authorization": f"Bearer {get_access_token()}",
-        "Content-Type": "application/json"
-    }
+    payload = {"requests": [{"entityTypes": ["driveItem"], "query": {"queryString": anken_number}, "region": "JPN"}]}
+    headers = {"Authorization": f"Bearer {get_access_token()}", "Content-Type": "application/json"}
     resp = requests.post(search_url, headers=headers, json=payload)
     if resp.status_code != 200:
         raise Exception(f"Search failed: {resp.text}")
@@ -27,11 +16,8 @@ def search_anken_folder(anken_number):
         return None
     first = items[0]
     item = first.get("resource", {})
-    return {
-        "name": item.get("name"),
-        "id": item.get("id"),
-        "parentReference": item.get("parentReference", {})
-    }
+    return {"name": item.get("name"), "id": item.get("id"), "parentReference": item.get("parentReference", {})}
+
 
 def list_children(drive_id, folder_id):
     url = f"{BASE_URL}/drives/{drive_id}/items/{folder_id}/children"

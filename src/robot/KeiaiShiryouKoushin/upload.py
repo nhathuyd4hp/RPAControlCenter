@@ -1,13 +1,16 @@
-from pathlib import Path
-from concurrent.futures import ThreadPoolExecutor, as_completed
-from graph_uploader import get_site_id, get_drive_id, create_folder_if_not_exists, upload_file
-from token_manager import get_access_token
-from config import BASE_URL
-import requests, os, logging, shutil
-from tqdm import tqdm
-from colorama import Fore
-from graph_searcher import search_anken_folder
+import logging
+import os
 import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from pathlib import Path
+
+import requests
+from colorama import Fore
+from config import BASE_URL
+from graph_searcher import search_anken_folder
+from graph_uploader import create_folder_if_not_exists, get_drive_id, get_site_id, upload_file
+from token_manager import get_access_token
+from tqdm import tqdm
 
 
 def fileUpload_graph_api(upload_path, 案件番号):
@@ -126,13 +129,13 @@ def wait_for_download(folder_path: str, timeout: int = 60):
     while True:
         in_progress = False
         for file in os.listdir(folder_path):
-            if file.endswith('.download') or file.endswith('.tmp'):
+            if file.endswith(".download") or file.endswith(".tmp"):
                 in_progress = True
                 break
             full_path = os.path.join(folder_path, file)
             if os.path.isfile(full_path):
                 try:
-                    with open(full_path, 'rb') as f:
+                    with open(full_path, "rb") as f:
                         f.read(1)
                 except (PermissionError, OSError):
                     in_progress = True

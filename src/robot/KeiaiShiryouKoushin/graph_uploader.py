@@ -1,8 +1,10 @@
-import os
 import logging
+import os
+
 import requests
-from token_manager import get_access_token
 from config import BASE_URL
+from token_manager import get_access_token
+
 
 def upload_pdfs_with_structure(local_folder_path, Ankensfolder_name):
     try:
@@ -14,7 +16,7 @@ def upload_pdfs_with_structure(local_folder_path, Ankensfolder_name):
         anken_folder_id = create_folder_if_not_exists(drive_id, None, Ankensfolder_name)
 
         # 🚀 Walk through local folder recursively
-        for root, dirs, files in os.walk(local_folder_path):
+        for root, _, files in os.walk(local_folder_path):
             for file_name in files:
                 if file_name.endswith(".pdf"):
                     file_path = os.path.join(root, file_name)
@@ -52,6 +54,7 @@ def get_site_id(site_name):
         logging.error(f"Failed to get site ID for {site_name}: {resp.text}")
         raise Exception("Failed to retrieve site ID")
 
+
 def get_drive_id(site_id):
     """
     Retrieves the drive ID for a given site ID.
@@ -64,18 +67,25 @@ def get_drive_id(site_id):
     else:
         logging.error(f"Failed to get drive ID: {resp.text}")
         raise Exception("Failed to retrieve drive ID")
+
+
 def get_folder_id_recursive(drive_id, parent_id, folder_list):
-    """ Recursively navigate folders to get final folder id """
+    """Recursively navigate folders to get final folder id"""
     current_id = parent_id
     for folder_name in folder_list:
         current_id = create_folder_if_not_exists(drive_id, current_id, folder_name)
     return current_id
 
+
 def create_folder_if_not_exists(drive_id, parent_id, folder_name):
     """
     Checks if a folder exists under the specified parent and creates it if not present.
     """
-    folder_url = f"{BASE_URL}/drives/{drive_id}/items/{parent_id}/children" if parent_id else f"{BASE_URL}/drives/{drive_id}/root/children"
+    folder_url = (
+        f"{BASE_URL}/drives/{drive_id}/items/{parent_id}/children"
+        if parent_id
+        else f"{BASE_URL}/drives/{drive_id}/root/children"
+    )
     headers = {"Authorization": f"Bearer {get_access_token()}", "Content-Type": "application/json"}
     resp = requests.get(folder_url, headers=headers)
     if resp.status_code != 200:
@@ -92,6 +102,7 @@ def create_folder_if_not_exists(drive_id, parent_id, folder_name):
     else:
         raise Exception(f"Failed to create folder '{folder_name}': {resp.text}")
 
+
 def upload_file(drive_id, folder_id, file_path):
     """
     Uploads a file to a specified folder in SharePoint.
@@ -99,7 +110,7 @@ def upload_file(drive_id, folder_id, file_path):
     file_name = os.path.basename(file_path)
     url = f"{BASE_URL}/drives/{drive_id}/items/{folder_id}:/{file_name}:/content"
     headers = {"Authorization": f"Bearer {get_access_token()}"}
-    with open(file_path, 'rb') as file_data:
+    with open(file_path, "rb") as file_data:
         resp = requests.put(url, headers=headers, data=file_data)
     if resp.status_code not in [200, 201]:
         raise Exception(f"Upload failed for '{file_name}': {resp.text}")
