@@ -561,15 +561,29 @@ class App(tk.Tk):
         self.to_date_entry.place(relx=0.5, rely=0.5, anchor=CENTER)
         self.to_date_entry.set_date(self.to_date)
 
-        start_button = Button(text="Start Bot", command=self.start_script, bg="#3290db", fg="white")
-        start_button.place(relx=0.5, rely=0.6, anchor=CENTER)
+        self.start_button = Button(self, text="Start Bot", command=self.start_script, bg="#3290db", fg="white")
+        self.start_button.place(relx=0.5, rely=0.6, anchor=CENTER)
 
         self.after(5000, self.start_script)
 
     def start_script(self):
         self.from_date = self.from_date_entry.get_date()
         self.to_date = self.to_date_entry.get_date()
-        threading.Thread(target=self.run_script).start()
+
+        self.worker_thread = threading.Thread(target=self.run_script)
+        self.worker_thread.start()
+
+        self.monitor_thread()
+
+    def monitor_thread(self):
+        if self.worker_thread.is_alive():
+            self.start_button.after(5000, self.monitor_thread)
+        else:
+            self.on_script_finished()
+
+    def on_script_finished(self):
+        self.quit()
+        self.destroy()
 
     def run_script(self):
         try:
