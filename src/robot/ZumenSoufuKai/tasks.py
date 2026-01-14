@@ -39,6 +39,8 @@ def ZumenSoufuKai(self):
         key=lambda p: p.stat().st_mtime,
         default=None,
     )
+    if not latest_pdf:
+        raise FileNotFoundError("ProgressReports: FileNotFound")
 
     result = minio.fput_object(
         bucket_name=settings.MINIO_BUCKET,
