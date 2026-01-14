@@ -1,8 +1,9 @@
 # === logging_setup.py ===
-import sys
+import datetime
 import logging
 import os
-import datetime
+import sys
+
 
 def setup_logging():
     # Create Logs folder if not exists
@@ -26,11 +27,11 @@ def setup_logging():
     console_handler.setLevel(logging.INFO)
 
     # File Handler
-    file_handler = logging.FileHandler(log_filename, encoding='utf-8')
+    file_handler = logging.FileHandler(log_filename, encoding="utf-8")
     file_handler.setLevel(logging.INFO)
 
     # Formatter
-    formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+    formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
     console_handler.setFormatter(formatter)
     file_handler.setFormatter(formatter)
 
