@@ -1,11 +1,12 @@
-import datetime
 import logging
 import os
 import time
-import requests
-from msal import ConfidentialClientApplication
-from dotenv import load_dotenv
 from pathlib import Path
+
+import requests
+from dotenv import load_dotenv
+from msal import ConfidentialClientApplication
+
 # === Microsoft Graph API Credentials ===
 current_dir = Path(__file__).resolve().parent
 env_path = current_dir.parent.parent.parent / ".env"
@@ -20,25 +21,23 @@ GRAPH_SCOPE = ["https://graph.microsoft.com/.default"]
 # === Token cache ===
 _token_cache = {"access_token": None, "expires_at": 0}
 
+
 def get_access_token():
     now = time.time()
     if _token_cache["access_token"] and now < _token_cache["expires_at"] - 60:
         return _token_cache["access_token"]
-    
+
     authority = f"https://login.microsoftonline.com/{TENANT_ID}"
-    app = ConfidentialClientApplication(
-        client_id=CLIENT_ID,
-        client_credential=CLIENT_SECRET,
-        authority=authority
-    )
+    app = ConfidentialClientApplication(client_id=CLIENT_ID, client_credential=CLIENT_SECRET, authority=authority)
     result = app.acquire_token_for_client(scopes=GRAPH_SCOPE)
-    
+
     if "access_token" not in result:
         raise Exception(f"Failed to get token: {result.get('error_description')}")
-    
+
     _token_cache["access_token"] = result["access_token"]
     _token_cache["expires_at"] = now + result["expires_in"]
     return _token_cache["access_token"]
+
 
 # === Site ID ===
 def get_site_id():
@@ -59,12 +58,13 @@ def list_all_drives(site_id):
     resp = requests.get(url, headers=headers)
     if resp.status_code != 200:
         raise Exception(f"Failed to list drives: {resp.text}")
-    
+
     drives = resp.json()["value"]
     logging.info("\n🔍 Available Drives:")
     for i, drive in enumerate(drives):
         logging.info(f"  {i + 1}. {drive['name']} (ID: {drive['id']})")
     return drives
+
 
 # === Choose Correct Drive ===
 def choose_drive_by_name(drives, name_hint):
@@ -73,16 +73,45 @@ def choose_drive_by_name(drives, name_hint):
             return drive["id"]
     raise Exception(f"No drive found with name containing: {name_hint}")
 
+
 # === Determine index folder from builder name ===
 def get_index_folder(builder_name):
     hira_index_map = {
-        'あ': 'あ行', 'い': 'あ行', 'う': 'あ行', 'え': 'あ行', 'お': 'あ行',
-        'か': 'か行', 'き': 'か行', 'く': 'か行', 'け': 'か行', 'こ': 'か行',
-        'さ': 'さ行', 'し': 'さ行', 'す': 'さ行', 'せ': 'さ行', 'そ': 'さ行',
-        'た': 'た行', 'ち': 'た行', 'つ': 'た行', 'て': 'た行', 'と': 'た行',
-        'な': 'な行', 'に': 'な行', 'ぬ': 'な行', 'ね': 'な行', 'の': 'な行',
-        'は': 'は行', 'ひ': 'は行', 'ふ': 'は行', 'へ': 'は行', 'ほ': 'は行',
-        'ま': 'ま行', 'み': 'ま行', 'む': 'ま行', 'め': 'ま行', 'も': 'ま行',
+        "あ": "あ行",
+        "い": "あ行",
+        "う": "あ行",
+        "え": "あ行",
+        "お": "あ行",
+        "か": "か行",
+        "き": "か行",
+        "く": "か行",
+        "け": "か行",
+        "こ": "か行",
+        "さ": "さ行",
+        "し": "さ行",
+        "す": "さ行",
+        "せ": "さ行",
+        "そ": "さ行",
+        "た": "た行",
+        "ち": "た行",
+        "つ": "た行",
+        "て": "た行",
+        "と": "た行",
+        "な": "な行",
+        "に": "な行",
+        "ぬ": "な行",
+        "ね": "な行",
+        "の": "な行",
+        "は": "は行",
+        "ひ": "は行",
+        "ふ": "は行",
+        "へ": "は行",
+        "ほ": "は行",
+        "ま": "ま行",
+        "み": "ま行",
+        "む": "ま行",
+        "め": "ま行",
+        "も": "ま行",
     }
     first_char = builder_name[0]
     return hira_index_map.get(first_char, None)
@@ -93,9 +122,7 @@ def search_folder_in_folder(drive_id, parent_id, target_folder_name):
     指定したフォルダ(parent_id)配下の子フォルダの中から、名前が一致するフォルダを探す
     """
     url = f"https://graph.microsoft.com/v1.0/drives/{drive_id}/items/{parent_id}/children?$top=999"
-    headers = {
-        "Authorization": f"Bearer {get_access_token()}"
-    }
+    headers = {"Authorization": f"Bearer {get_access_token()}"}
 
     response = requests.get(url, headers=headers)
     if response.status_code != 200:
@@ -119,38 +146,31 @@ def search_folder_in_folder(drive_id, parent_id, target_folder_name):
     return False
 
 
-    
-    
 def create_folder(drive_id, parent_folder_id, new_folder_name):
     url = f"{BASE_URL}/drives/{drive_id}/items/{parent_folder_id}/children"
 
-    headers = {
-        "Authorization": f"Bearer {get_access_token()}",
-        "Content-Type": "application/json"
-    }
+    headers = {"Authorization": f"Bearer {get_access_token()}", "Content-Type": "application/json"}
 
     data = {
         "name": new_folder_name,
         "folder": {},  # Specifies it's a folder
-        "@microsoft.graph.conflictBehavior": "replace"
+        "@microsoft.graph.conflictBehavior": "replace",
     }
 
     resp = requests.post(url, headers=headers, json=data)
     if resp.status_code not in (200, 201):
         raise Exception(f"❌ Failed to create folder '{new_folder_name}': {resp.text}")
-    
+
     logging.info(f"Folder '{new_folder_name}' created successfully.")
     return resp.json()
 
+
 def upload_file(drive_id, parent_folder_id, file_path, file_name):
-    with open(file_path, 'rb') as f:
+    with open(file_path, "rb") as f:
         content = f.read()
 
     url = f"https://graph.microsoft.com/v1.0/drives/{drive_id}/items/{parent_folder_id}:/{file_name}:/content"
-    headers = {
-        "Authorization": f"Bearer {get_access_token()}",
-        "Content-Type": "application/octet-stream"
-    }
+    headers = {"Authorization": f"Bearer {get_access_token()}", "Content-Type": "application/octet-stream"}
 
     response = requests.put(url, headers=headers, data=content)
 
@@ -173,12 +193,10 @@ def upload_folder(drive_id, parent_folder_id, local_folder_path):
 
     logging.info(f"Uploaded folder '{folder_name}'")
 
+
 def search_folder_in_drive_root(drive_id, target_folder_name):
     try:
-        headers = {
-            "Authorization": f"Bearer {get_access_token()}",
-            "Content-Type": "application/json"
-        }
+        headers = {"Authorization": f"Bearer {get_access_token()}", "Content-Type": "application/json"}
 
         # Get children of the drive root
         url = f"{BASE_URL}/drives/{drive_id}/root/children"
@@ -201,6 +219,8 @@ def search_folder_in_drive_root(drive_id, target_folder_name):
 # === MAIN ===
 # if __name__ == "__main__":
 logging.basicConfig(level=logging.INFO)
+
+
 def builder_sharepoint(builder_name, 案件番号, 案件名):
     try:
         logging.info(f"Builder: {builder_name}")
@@ -237,13 +257,12 @@ def builder_sharepoint(builder_name, 案件番号, 案件名):
         main_folder_id = main_folder["id"]
 
         # ⑤ サブフォルダ作成
-        
+
         create_folder(drive_id, main_folder_id, "資料")
         logging.info(f"Created '{main_folder_name}/資料'")
 
         logging.info(f"✅ アップロード完了！フォルダリンク: {main_folder['webUrl']}")
         # return main_folder["webUrl"]
-
 
         # ⑥ ローカルからアップロード
         # date = datetime.datetime.now().strftime('%d_%m_%y')
@@ -272,8 +291,6 @@ def builder_sharepoint(builder_name, 案件番号, 案件名):
         logging.info(f"❌ Error: {e}")
         return False
 
-    
+
 # builder = "□案件番号500000～□"
 # builder_sharepoint("□案件番号500000～□", "12345", "asdfgh")
-
-

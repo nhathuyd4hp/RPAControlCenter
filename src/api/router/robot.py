@@ -1,6 +1,8 @@
 import inspect
-from fastapi import APIRouter, Depends, HTTPException, status,Request
+
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlmodel import Session
+
 from src.api.common.response import SuccessResponse
 from src.api.dependency import get_session
 from src.schema.run import RunManual
@@ -19,7 +21,7 @@ def get_robots(request: Request):
     cache = getattr(request.app.state, "robots", None)
     if cache is not None:
         return SuccessResponse(data=cache)
-    # --- # 
+    # --- #
     robots = []
     for name, task in Worker.tasks.items():
         if name.startswith("celery."):
