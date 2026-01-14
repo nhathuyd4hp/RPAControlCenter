@@ -564,6 +564,8 @@ class App(tk.Tk):
         start_button = Button(text="Start Bot", command=self.start_script, bg="#3290db", fg="white")
         start_button.place(relx=0.5, rely=0.6, anchor=CENTER)
 
+        self.after(5000, self.start_script)
+
     def start_script(self):
         self.from_date = self.from_date_entry.get_date()
         self.to_date = self.to_date_entry.get_date()
