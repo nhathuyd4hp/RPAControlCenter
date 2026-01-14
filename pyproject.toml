@@ -19,6 +19,7 @@ dependencies = [
     "minio>=7.2.20",
     "msal>=1.34.0",
     "nasiwak>=0.1.9",
+    "office365-rest-python-client>=2.6.2",
     "openpyxl>=3.1.5",
     "pandas>=2.3.3",
     "pdf2image>=1.17.0",
