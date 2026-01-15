@@ -232,3 +232,4 @@ Tesseract/
 *.pdf
 Access_token_log
 *.jww
+*.csv

@@ -1242,7 +1242,7 @@ class App:
         )
         self.footer.pack(pady=(8, 12))
 
-        self.root.after(15000, self.on_start)
+        self.root.after(10000, self.on_start)
 
     def set_busy(self, busy: bool):
         try:
