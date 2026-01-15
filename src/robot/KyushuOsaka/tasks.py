@@ -1,4 +1,5 @@
 import glob
+from openpyxl.utils import get_column_letter
 import os
 import re
 import shutil
@@ -372,6 +373,27 @@ def kyushu_osaka(
                             app.quit()
                     except Exception:
                         logger.warning("Lỗi macro")
+                        api.write(
+                            site_id=file.get("site_id"),
+                            drive_id=drive_id,
+                            item_id=file.get("item_id"),
+                            range=f"E{index}",
+                            data=[["Lỗi: Chạy macro lỗi"]],
+                            sheet="データUP状況",
+                        )
+                        break
+                    macro_data = pd.read_excel(
+                        io=macro_file,
+                        sheet_name="メインメニュー",
+                        header=None,
+                    )
+                    macro_data.index = macro_data.index + 1
+                    macro_data.columns = [get_column_letter(i + 1) for i in range(macro_data.shape[1])]
+                    result = set(macro_data["H"][2:])
+                    result = {x for x in result if pd.notna(x)}
+                    logger.info(f"Macro result: {result}")
+                    if result != {"OK"}:
+                        logger.warning("Lỗi: Chạy macro lỗi")
                         api.write(
                             site_id=file.get("site_id"),
                             drive_id=drive_id,

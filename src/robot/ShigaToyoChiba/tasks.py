@@ -1,4 +1,5 @@
 import glob
+from openpyxl.utils import get_column_letter
 import os
 import re
 import shutil
@@ -409,6 +410,26 @@ def shiga_toyo_chiba(
                                 wb_macro.close()
                                 app.quit()
                         except Exception:
+                            logger.warning("Lỗi: Chạy macro lỗi")
+                            APIClient.write(
+                                siteId=DataShigaUp_SiteID,
+                                driveId=DataShigaUp_DriveID,
+                                itemId=DataShigaUp_ItemID,
+                                range=f"E{index+2}",
+                                data=[["Lỗi: Chạy macro lỗi"]],
+                            )
+                            break
+                        macro_data = pd.read_excel(
+                            io=macro_file,
+                            sheet_name="メインメニュー",
+                            header=None,
+                        )
+                        macro_data.index = macro_data.index + 1
+                        macro_data.columns = [get_column_letter(i + 1) for i in range(macro_data.shape[1])]
+                        result = set(macro_data["H"][2:])
+                        result = {x for x in result if pd.notna(x)}
+                        logger.info(f"Macro result: {result}")
+                        if result != {"OK"}:
                             logger.warning("Lỗi: Chạy macro lỗi")
                             APIClient.write(
                                 siteId=DataShigaUp_SiteID,
