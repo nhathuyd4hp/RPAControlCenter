@@ -163,7 +163,7 @@ def tochigi(self, process_date: datetime | str):
     logger = Log.get_logger(channel=TaskID, redis_client=redis.Redis(connection_pool=REDIS_POOL))
     logger.info(f"Upload Tochigi: {process_date}")
     # ----- Resource File ----- #
-    macro_file = "src/resource/マクロチェック(240819ver).xlsm"
+    macro_file = "src/resource/マクロチェック (20260114-hisano).xlsm"
     # ----- Process ----- #
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=False, args=["--start-maximized"])

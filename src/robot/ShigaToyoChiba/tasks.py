@@ -397,7 +397,7 @@ def shiga_toyo_chiba(
                         try:
                             with FileLock(os.path.join("src/resource", "macro.lock"), timeout=300):
                                 app = xw.App(visible=False)
-                                macro_file = "src/resource/マクロチェック(240819ver).xlsm"
+                                macro_file = "src/resource/マクロチェック (20260114-hisano).xlsm"
                                 wb_macro = app.books.open(macro_file)
                                 threading.Thread(
                                     target=Fname, args=(os.path.abspath(os.path.join(download_path, "excel")),)
