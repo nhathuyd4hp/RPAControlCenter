@@ -154,6 +154,8 @@ def MejiIrisumiCheck(
                     # 入隅数量 = 0 if math.isnan(入隅数量) else 入隅数量
                     # ---- #
                     logger.info(f"{int(案件番号)} - {資料リンク} (Remaining: {orders.shape[0] - index - 1})")
+                    if pd.isna(資料リンク):
+                        continue
                     downloads = sp.download_files(
                         url=資料リンク,
                         steps=[re.compile("^見積書$")],

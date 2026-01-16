@@ -13,7 +13,7 @@ class Settings(BaseSettings):
     # App
     DEBUG: bool = False
     ROOT_PATH: str = "/api"
-    APP_NAME: str = "Orchestration Server"
+    APP_NAME: str = "Robot Server"
     # DATABASE
     MYSQL_SERVER: str = "127.0.0.1"
     MYSQL_PORT: int = 3306
