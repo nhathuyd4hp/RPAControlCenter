@@ -1,4 +1,5 @@
 import os
+import contextlib
 import re
 import time
 from typing import List
@@ -104,10 +105,11 @@ class SharePoint:
                 ).wait_for(
                     state="visible",
                 )
-            self.page.locator(
-                selector="span[role='button'][data-id='heroField']",
-                has_text=file,
-            ).first.wait_for(timeout=5000, state="visible")
+            with contextlib.suppress(TimeoutError):
+                self.page.locator(
+                    selector="span[role='button'][data-id='heroField']",
+                    has_text=file,
+                ).first.wait_for(timeout=5000, state="visible")
             items = self.page.locator(
                 selector="span[role='button'][data-id='heroField']",
                 has_text=file,
