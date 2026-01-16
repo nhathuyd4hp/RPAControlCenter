@@ -1,15 +1,10 @@
-import os
-from io import BytesIO
-
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from fastapi.responses import StreamingResponse
 from sqlmodel import Session
 
 from src.api.common.response import SuccessResponse
 from src.api.dependency import get_session
-from src.core.config import settings
 from src.model.runs import Status
-from src.service import ResultService, RunService
+from src.service import RunService
 
 router = APIRouter(prefix="/runs", tags=["Runs"])
 
@@ -29,12 +24,13 @@ def get_histories(
         histories = RunService(session).findMany()
     return SuccessResponse(data=histories)
 
+
 @router.get(
     path="/{id}",
     name="Lịch sử chạy",
     response_model=SuccessResponse,
 )
-def get_histories(
+def get_history(
     id: str,
     session: Session = Depends(get_session),
 ):

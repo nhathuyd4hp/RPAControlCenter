@@ -57,4 +57,4 @@ def OHD_MITSUMORI(self):
     # 3️⃣ (Optional) xóa file local sau khi upload
     latest_result.unlink(missing_ok=True)
 
-    return result.object_name
+    return f"{settings.RESULT_BUCKET}/{result.object_name}"

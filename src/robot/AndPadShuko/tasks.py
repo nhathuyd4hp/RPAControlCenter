@@ -103,4 +103,4 @@ def main(self):
                 file_path=os.path.join(temp_dir, ResultFile),
                 content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             )
-            return result.object_name
+            return f"{settings.RESULT_BUCKET}/{result.object_name}"

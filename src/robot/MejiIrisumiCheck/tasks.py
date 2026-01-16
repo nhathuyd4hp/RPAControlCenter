@@ -191,6 +191,6 @@ def MejiIrisumiCheck(
                 content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             )
             os.remove(save_path)
-            return result.object_name
+            return f"{settings.RESULT_BUCKET}/{result.object_name}"
     except TimeoutError:
         pass

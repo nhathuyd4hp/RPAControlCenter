@@ -173,4 +173,4 @@ def seikyu_online(self, sheet_name: API | str = "/api/type/seikyu-online"):
                 length=len(data),
             )
 
-            return result.object_name
+            return f"{settings.RESULT_BUCKET}/{result.object_name}"

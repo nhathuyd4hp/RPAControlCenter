@@ -48,4 +48,4 @@ def ZumenSoufuKai(self):
         file_path=str(latest_pdf),
         content_type="application/pdf",
     )
-    return result.object_name
+    return f"{settings.RESULT_BUCKET}/{result.object_name}"

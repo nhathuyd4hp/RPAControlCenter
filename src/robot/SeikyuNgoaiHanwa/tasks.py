@@ -198,4 +198,4 @@ def seikyu(
             length=len(data),
         )
 
-        return result.object_name
+        return f"{settings.RESULT_BUCKET}/{result.object_name}"

@@ -42,4 +42,4 @@ def Tama_Ankenka(self):
 
     file_path.unlink(missing_ok=True)
 
-    return result.object_name
+    return f"{settings.RESULT_BUCKET}/{result.object_name}"

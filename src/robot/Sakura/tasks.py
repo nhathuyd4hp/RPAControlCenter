@@ -232,4 +232,4 @@ def Sakura(self):
             file_path=pdfFile,
             content_type="application/pdf",
         )
-        return result.object_name
+        return f"{settings.RESULT_BUCKET}/{result.object_name}"

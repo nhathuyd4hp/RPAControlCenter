@@ -202,4 +202,4 @@ def main(self):
                     file_path=temp_file_path,
                     content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                 )
-                return result.object_name
+                return f"{settings.RESULT_BUCKET}/{result.object_name}"
