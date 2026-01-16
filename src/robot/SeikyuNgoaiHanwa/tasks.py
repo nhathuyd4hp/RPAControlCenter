@@ -127,7 +127,9 @@ def seikyu(
             for current, row in data.iterrows():
                 logger.info(f"{current}/{data['受注NO'].last_valid_index()}")
                 if (
-                    pd.isna(row["受注NO"])
+                    pd.isna(row["365URL"])
+                    # Không xử lí cột NaN
+                    or pd.isna(row["受注NO"])
                     # Không xử lí giá trị màu xanh ở cột A
                     or pd.isna(row["締日"])
                     # Không xử lí dòng có giá trị 不足 ở cột B

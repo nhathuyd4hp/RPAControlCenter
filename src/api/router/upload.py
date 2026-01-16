@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime, timedelta
 from pathlib import Path
 
-from fastapi import APIRouter, File, UploadFile
+from fastapi import APIRouter, File, Query, UploadFile
 from fastapi.responses import StreamingResponse
 
 from src.api.common.response import SuccessResponse
@@ -36,10 +36,10 @@ async def upload_asset(file: UploadFile = File(...)):
 
 
 @router.get(
-    path="/{bucket}/{objectName}",
+    path="/{bucket}",
     response_model=SuccessResponse,
 )
-async def get_asset(bucket: str, objectName: str):
+async def get_asset(bucket: str, objectName: str = Query(...)):
     obj = minio.get_object(bucket, objectName)
     return StreamingResponse(
         obj,
