@@ -91,7 +91,7 @@ def Shuko(self):
     object_name = f"ShukoTaoSo/{self.request.id}/{self.request.id}.xlsm"
 
     result = minio.fput_object(
-        bucket_name=settings.MINIO_BUCKET,
+        bucket_name=settings.RESULT_BUCKET,
         file_path=get_excel_path(),
         object_name=object_name,
         content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",

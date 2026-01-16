@@ -43,7 +43,7 @@ def ZumenSoufuKai(self):
         raise FileNotFoundError("ProgressReports: FileNotFound")
 
     result = minio.fput_object(
-        bucket_name=settings.MINIO_BUCKET,
+        bucket_name=settings.RESULT_BUCKET,
         object_name=f"ZumenSoufuKai/{self.request.id}/ZumenSoufuKai.pdf",
         file_path=str(latest_pdf),
         content_type="application/pdf",

@@ -89,7 +89,7 @@ def update_area_web_access(self):
             excel_buffer.seek(0)
             # --- #
             result = minio.put_object(
-                bucket_name=settings.MINIO_BUCKET,
+                bucket_name=settings.RESULT_BUCKET,
                 object_name=f"CapNhatDienTich/{self.request.id}/{self.request.id}.xlsx",
                 data=excel_buffer,
                 length=excel_buffer.getbuffer().nbytes,

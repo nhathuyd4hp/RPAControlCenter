@@ -1,3 +1,4 @@
+from minio.lifecycleconfig import Expiration, LifecycleConfig, Rule
 from pydantic import computed_field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from sqlalchemy.engine import Engine
@@ -30,7 +31,9 @@ class Settings(BaseSettings):
     MINIO_ACCESS_KEY: str
     MINIO_SECRET_KEY: str
     MINIO_SECURE: bool = False
-    MINIO_BUCKET: str = "robot"
+    RESULT_BUCKET: str = "robot"
+    TEMP_BUCKET: str = "temp"
+    ASSET_RETENTION_DAYS: int = 31
     # WEB ACCESS
     WEBACCESS_USERNAME: str
     WEBACCESS_PASSWORD: str
@@ -69,6 +72,18 @@ class Settings(BaseSettings):
     @property
     def db_engine(self) -> Engine:
         return create_engine(self.MYSQL_CONNECTION_STRING)
+
+    @computed_field
+    @property
+    def LifecycleConfig(self) -> LifecycleConfig:
+        rules: list[Rule] = [
+            Rule(
+                rule_id=f"retention-{self.ASSET_RETENTION_DAYS}d",
+                status="Enabled",
+                expiration=Expiration(days=self.ASSET_RETENTION_DAYS),
+            )
+        ]
+        return LifecycleConfig(rules)
 
 
 settings = Settings()

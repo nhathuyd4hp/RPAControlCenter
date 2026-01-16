@@ -45,7 +45,7 @@ def keiai_shiryou_koushin(
     result_file = cwd_path / "Kistarkoushin.xlsx"
 
     result = minio.fput_object(
-        bucket_name=settings.MINIO_BUCKET,
+        bucket_name=settings.RESULT_BUCKET,
         object_name=f"KeiaiShiryouKoushin/{self.request.id}/Kistarkoushin.xlsx",
         file_path=str(result_file),
         content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",

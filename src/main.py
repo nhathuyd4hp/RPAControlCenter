@@ -19,7 +19,8 @@ from src.api.router import api
 from src.core.config import settings
 from src.core.redis import Async_Redis_POOL
 from src.scheduler import scheduler
-from src.service import ResultService, ScheduleService
+from src.service import ResultService as minio
+from src.service import ScheduleService
 from src.socket import manager
 from src.worker import Worker
 
@@ -145,8 +146,10 @@ async def lifespan(app: FastAPI):
     scheduler.start()
     app.state.scheduler = scheduler
     # --- MinIO --- #
-    if not ResultService.bucket_exists(settings.MINIO_BUCKET):
-        ResultService.make_bucket(settings.MINIO_BUCKET)
+    for bucket in [settings.RESULT_BUCKET, settings.TEMP_BUCKET]:
+        if not minio.bucket_exists(bucket):
+            minio.make_bucket(bucket)
+        minio.set_bucket_lifecycle(bucket, settings.LifecycleConfig)
     yield
     scheduler.shutdown()
 

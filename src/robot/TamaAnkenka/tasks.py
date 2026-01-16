@@ -34,7 +34,7 @@ def Tama_Ankenka(self):
     file_path = exe_path.parent / "結果.xlsx"
 
     result = minio.fput_object(
-        bucket_name=settings.MINIO_BUCKET,
+        bucket_name=settings.RESULT_BUCKET,
         object_name=f"TamaAnkenka/{self.request.id}/{self.request.id}.xlsx",
         file_path=str(file_path),
         content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",

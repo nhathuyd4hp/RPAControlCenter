@@ -114,7 +114,7 @@ def gui_ban_ve_xac_nhan_classic(
             excel_buffer.seek(0)
 
             result = minio.put_object(
-                bucket_name=settings.MINIO_BUCKET,
+                bucket_name=settings.RESULT_BUCKET,
                 # SỬA Ở ĐÂY: đổi đuôi file thành .xlsx
                 object_name=f"DrawingClassic/{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.xlsx",
                 data=excel_buffer,

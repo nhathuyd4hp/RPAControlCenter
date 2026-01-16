@@ -227,7 +227,7 @@ def Sakura(self):
             logger=logger,
         )
         result = minio.fput_object(
-            bucket_name=settings.MINIO_BUCKET,
+            bucket_name=settings.RESULT_BUCKET,
             object_name=f"Sakura/{self.request.id}.pdf",
             file_path=pdfFile,
             content_type="application/pdf",

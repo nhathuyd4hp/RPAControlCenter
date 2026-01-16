@@ -48,7 +48,7 @@ def YokohamaKakunin(
     result_file = cwd_path / "結果.xlsx"
 
     result = minio.fput_object(
-        bucket_name=settings.MINIO_BUCKET,
+        bucket_name=settings.RESULT_BUCKET,
         object_name=f"YokohamaKakunin/{self.request.id}/YokohamaKakunin.xlsx",
         file_path=str(result_file),
         content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",

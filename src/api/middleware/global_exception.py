@@ -23,7 +23,15 @@ class GlobalExceptionMiddleware(BaseHTTPMiddleware):
                     status_code=404,
                     content={
                         "success": False,
-                        "message": "result not found",
+                        "message": "asset not found",
+                    },
+                )
+            if e.code == "NoSuchBucket":
+                return JSONResponse(
+                    status_code=404,
+                    content={
+                        "success": False,
+                        "message": "bucket not found",
                     },
                 )
             return JSONResponse(

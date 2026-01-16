@@ -185,7 +185,7 @@ def MejiIrisumiCheck(
                 wb.save(save_path)
                 wb.close()
             result = minio.fput_object(
-                bucket_name=settings.MINIO_BUCKET,
+                bucket_name=settings.RESULT_BUCKET,
                 object_name=f"MejiIrisumiCheck/{self.request.id}/{os.path.basename(save_path)}",
                 file_path=save_path,
                 content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",

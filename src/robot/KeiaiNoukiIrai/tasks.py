@@ -34,7 +34,7 @@ def keiai_nouki_irai(self):
     # Save Result
     result_file = cwd_path / "Data.xlsx"
     result = minio.fput_object(
-        bucket_name=settings.MINIO_BUCKET,
+        bucket_name=settings.RESULT_BUCKET,
         object_name=f"KeiaiNoukiIrai/{self.request.id}/Data.xlsx",
         file_path=str(result_file),
         content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",

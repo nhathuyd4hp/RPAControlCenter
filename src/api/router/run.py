@@ -38,7 +38,7 @@ def get_result(id: str, session: Session = Depends(get_session)):
     if history.status != Status.SUCCESS:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="run not successful")
     response = ResultService.get_object(
-        bucket_name=settings.MINIO_BUCKET,
+        bucket_name=settings.RESULT_BUCKET,
         object_name=history.result,
     )
     data = BytesIO(response.read())

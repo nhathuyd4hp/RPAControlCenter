@@ -47,7 +47,7 @@ def OHD_MITSUMORI(self):
     object_name = f"OHDMITSUMORI/{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.xlsx"
 
     result = minio.put_object(
-        bucket_name=settings.MINIO_BUCKET,
+        bucket_name=settings.RESULT_BUCKET,
         object_name=object_name,
         data=excel_buffer,
         length=excel_buffer.getbuffer().nbytes,

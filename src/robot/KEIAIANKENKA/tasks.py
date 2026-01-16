@@ -27,7 +27,7 @@ def KEIAI_ANKENKA(self):
     object_name = f"KeiaiAnkenka/{self.request.id}/Keiaistar.xlsx"
 
     result = minio.fput_object(
-        bucket_name=settings.MINIO_BUCKET,
+        bucket_name=settings.RESULT_BUCKET,
         file_path=str(result_file),
         object_name=object_name,
         content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",

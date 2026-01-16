@@ -197,7 +197,7 @@ def main(self):
                 temp_file_path = os.path.join(temp_dir, ResultFile)
                 database.to_excel(temp_file_path, index=False)
                 result = minio.fput_object(
-                    bucket_name=settings.MINIO_BUCKET,
+                    bucket_name=settings.RESULT_BUCKET,
                     object_name=f"GuiMailNoukiKakunin/{ResultFile}",
                     file_path=temp_file_path,
                     content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",

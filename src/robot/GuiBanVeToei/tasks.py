@@ -147,7 +147,7 @@ def gui_ban_ve_toei(self, process_date: datetime | str | None = None):
                 data.to_excel(excel_buffer, index=False, engine="xlsxwriter")
                 excel_buffer.seek(0)
                 result = minio.put_object(
-                    bucket_name=settings.MINIO_BUCKET,
+                    bucket_name=settings.RESULT_BUCKET,
                     object_name=f"GuiBanVeToei/{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.xlsx",
                     data=excel_buffer,
                     length=excel_buffer.getbuffer().nbytes,

@@ -63,7 +63,7 @@ def FuriwakeOsaka(
         raise RuntimeError("Results folder is empty")
     latest_file: Path = max(files, key=lambda f: f.stat().st_mtime)
     result = minio.fput_object(
-        bucket_name=settings.MINIO_BUCKET,
+        bucket_name=settings.RESULT_BUCKET,
         object_name=f"FuriwakeOsaka/{self.request.id}/{self.request.id}.xlsx",
         file_path=str(latest_file),
         content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
