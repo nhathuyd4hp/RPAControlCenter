@@ -28,3 +28,4 @@ from src.robot.ZumenSoufuKai import tasks  # noqa
 from src.robot.OsakaMitsumoriSoufu import tasks  # noqa
 from src.robot.GuiBanVeShuko import tasks  # noqa
 from src.robot.Zenbu import tasks  # noqa
+from src.robot.KeiaiNoukiIrai import tasks  # noqa
