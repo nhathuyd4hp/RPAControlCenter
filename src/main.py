@@ -158,6 +158,8 @@ app = FastAPI(
     title=settings.APP_NAME,
     debug=settings.DEBUG,
     lifespan=lifespan,
+    docs_url=None,
+    redoc_url=None,
 )
 app.add_middleware(GlobalExceptionMiddleware)
 app.add_middleware(
