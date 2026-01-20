@@ -373,7 +373,7 @@ def shiga_toyo_chiba(
                                 driveId=DataShigaUp_DriveID,
                                 itemId=DataShigaUp_ItemID,
                                 range=f"E{index+2}",
-                                data=[[f"{len(excel_files)} file / {count_floor} floors"]],
+                                data=[[f"{excel_files} file / {count_floor} floors"]],
                             )
                             break
                         logger.info("kiểm tra tên")
