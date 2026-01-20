@@ -47,7 +47,7 @@ def set_robot_schedule(
     session: Session = Depends(get_session),
 ):
     if data.name not in Worker.tasks.keys():
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="task not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="robot not found")
     schedule = ScheduleService(session).create(data)
     job: Job = scheduler.add_job(
         id=schedule.id,

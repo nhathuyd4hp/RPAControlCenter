@@ -2,13 +2,14 @@ import traceback
 
 import redis
 from celery import signals
+from celery.app.task import Context, Task
 from celery.result import AsyncResult
 from celery.worker.consumer.consumer import Consumer
 from sqlmodel import Session, select
 
 from src.core.config import settings
 from src.core.redis import REDIS_POOL
-from src.model import Runs
+from src.model import Error, Runs
 from src.model.runs import Status
 
 
@@ -19,10 +20,7 @@ def start_up(sender: Consumer, **kwargs):
         records: list[Runs] = session.exec(statement).all()
         for record in records:
             result = AsyncResult(id=record.id, app=sender.app)
-            if result.state == "PENDING":
-                record.status = Status.CANCEL
-                session.add(record)
-            if result.state == "FAILURE":
+            if result.state in ["PENDING", "FAILURE"]:
                 record.status = Status.FAILURE
                 session.add(record)
         session.commit()
@@ -58,7 +56,7 @@ def task_success_handler(sender=None, result=None, **kwargs):
     with Session(settings.db_engine) as session:
         statement = select(Runs).where(Runs.id == sender.request.id)
         record: Runs = session.exec(statement).one_or_none()
-        if not record:
+        if record is None:
             return
         record.status = Status.SUCCESS
         record.result = "" if result is None else str(result)
@@ -73,26 +71,23 @@ ID: {record.id}
 
 
 @signals.task_failure.connect
-def task_failure_handler(sender=None, exception=None, **kwargs):
-    tb = exception.__traceback__
-    last = traceback.extract_tb(tb)[-1]
+def task_failure_handler(sender: Task, exception: Exception, **kwargs):
+    context: Context = sender.request
     with Session(settings.db_engine) as session:
-        statement = select(Runs).where(Runs.id == sender.request.id)
+        statement = select(Runs).where(Runs.id == context.id)
         record = session.exec(statement).one_or_none()
-        if not record:
+        if record is None:
             return
-        record.status = Status.FAILURE
-        record.result = (
-            (
-                f"Error: {type(exception).__name__}\n"
-                f"Function: {last.name}\n"
-                f"Filename: {last.filename}\n"
-                f"Lineno: {last.lineno}"
-            )
-            if exception
-            else ""
+        error = Error(
+            run_id=context.id,
+            error_type=type(exception).__name__,
+            message=str(exception),
+            traceback="".join(traceback.format_tb(exception.__traceback__)),
         )
+        record.status = Status.FAILURE
+        record.result = type(exception).__name__
         session.add(record)
+        session.add(error)
         session.commit()
         message = f"""\n
 {record.robot} thất bại

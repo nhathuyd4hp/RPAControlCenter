@@ -1,6 +1,7 @@
 import logging
 import os
 import re
+import shutil
 import tempfile
 from datetime import datetime
 from decimal import ROUND_HALF_UP, Decimal
@@ -8,7 +9,6 @@ from decimal import ROUND_HALF_UP, Decimal
 import pandas as pd
 import redis
 import xlwings as xw
-import shutil
 from celery import shared_task
 from selenium import webdriver
 from xlwings.main import Sheet
@@ -204,11 +204,11 @@ def main(
 
                 　エヌ・エス・ケー工業㈱　横浜営業所
                 中山　知凡
-        
+
                 　〒222-0033
                 　横浜市港北区新横浜２-４-６　マスニ第一ビル８F-B
                 　TEL:(045)595-9165 / FAX:(045)577-0012
-        
+
                 -----・・・・・----------・・・・・----------・・・・・-----
                 """,
                 attachments=[
