@@ -16,6 +16,9 @@ if errorlevel 1 (
     exit /b 1
 )
 
+echo ===== MIGRATION =====
+start "MIGRATION" .venv/Scripts/python -m alembic upgrade head
+
 echo ===== START SERVER =====
 start "API Server" ./.venv/Scripts/python -m uvicorn src.main:app --host 0.0.0.0 --port 8000
 
