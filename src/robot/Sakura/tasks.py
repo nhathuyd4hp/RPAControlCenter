@@ -46,6 +46,8 @@ def main(
     task_id: str,
 ):
     # From To
+    if checker.get(task_id) is not None:
+        raise UserCancelledError()
     to_date = datetime.now().replace(day=20)
     if to_date.month == 1:
         from_date = to_date.replace(year=to_date.year - 1, month=12, day=21)
@@ -80,7 +82,10 @@ def main(
                 "資料リンク",
             ],
         )
+    if checker.get(task_id) is not None:
+        raise UserCancelledError()
     if data.empty:
+        logger.warning("data is empty")
         return
     # ---- Download files ----
     prices = []
@@ -94,6 +99,8 @@ def main(
         options=options,
     ) as share_point:
         for url in data["資料リンク"]:
+            if checker.get(task_id) is not None:
+                raise UserCancelledError()
             logger.info(url)
             downloads = share_point.download(
                 site_url=url,
@@ -126,6 +133,8 @@ def main(
                 prices.append(price)
                 logger.info(f"{file}: {price}")
     # Process
+    if checker.get(task_id) is not None:
+        raise UserCancelledError()
     data["金額（税抜）"] = prices
     data["金額（税抜）"] = pd.to_numeric(data["金額（税抜）"], errors="coerce").fillna(0)
     data.drop(columns=["資料リンク"], inplace=True)
@@ -182,6 +191,8 @@ def main(
             wb.close()
         if app:
             app.quit()
+        if checker.get(task_id) is not None:
+            raise UserCancelledError()
         logger.info("login mail dealer")
         with MailDealer(
             url="https://mds3310.maildealer.jp/",
@@ -191,6 +202,8 @@ def main(
             options=options,
         ) as mail_dealer:
             logger.info("send_mail")
+            if checker.get(task_id) is not None:
+                raise UserCancelledError()
             mail_dealer.send_mail(
                 fr="kantou@nsk-cad.com",
                 to="ikeda.k@jkenzai.com",
