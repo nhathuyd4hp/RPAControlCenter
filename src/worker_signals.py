@@ -21,7 +21,7 @@ def start_up(sender: Consumer, **kwargs):
         records: list[Runs] = session.exec(statement).all()
         for record in records:
             result = AsyncResult(id=record.id, app=sender.app)
-            if result.state in ["PENDING", "FAILURE"]:
+            if result.state in ["Pending", "Failure"]:
                 record.status = Status.FAILURE
                 session.add(record)
         session.commit()
