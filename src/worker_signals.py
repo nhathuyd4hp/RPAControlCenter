@@ -83,6 +83,13 @@ def task_failure_handler(sender: Task, exception: Exception, **kwargs):
             record.status = Status.CANCEL
             record.result = exception.message
             session.add(record)
+            session.commit()
+            message = f"""\n
+{record.robot} đã dừng lại
+--------------------------
+ID: {record.id}
+"""
+            redis.Redis(connection_pool=REDIS_POOL).publish("CELERY", message)            
         else:
             error = Error(
                 run_id=context.id,
@@ -94,10 +101,10 @@ def task_failure_handler(sender: Task, exception: Exception, **kwargs):
             record.result = type(exception).__name__
             session.add(error)
             session.add(record)
-        session.commit()
-        message = f"""\n
+            session.commit()
+            message = f"""\n
 {record.robot} thất bại
 -----------------------
 ID: {record.id}
 """
-        redis.Redis(connection_pool=REDIS_POOL).publish("CELERY", message)
+            redis.Redis(connection_pool=REDIS_POOL).publish("CELERY", message)
