@@ -161,19 +161,11 @@ app = FastAPI(
     title=settings.APP_NAME,
     debug=settings.DEBUG,
     lifespan=lifespan,
-    docs_url=None,
-    redoc_url=None,
+    # docs_url=None,
+    # redoc_url=None,
     openapi_url=f"/{uuid.uuid4()}.json",
 )
 app.add_middleware(GlobalExceptionMiddleware)
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
 
 @app.get("/redocs", include_in_schema=False, response_class=HTMLResponse)
 async def documentation(_: str = Depends(required_admin)):
