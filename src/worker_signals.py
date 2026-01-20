@@ -89,7 +89,7 @@ def task_failure_handler(sender: Task, exception: Exception, **kwargs):
 --------------------------
 ID: {record.id}
 """
-            redis.Redis(connection_pool=REDIS_POOL).publish("CELERY", message)            
+            redis.Redis(connection_pool=REDIS_POOL).publish("CELERY", message)
         else:
             error = Error(
                 run_id=context.id,

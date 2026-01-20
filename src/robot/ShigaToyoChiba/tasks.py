@@ -11,6 +11,7 @@ import pandas as pd
 import redis
 import xlwings as xw
 from celery import shared_task
+from celery.app.task import Task
 from filelock import FileLock
 from openpyxl.utils import get_column_letter
 from playwright.sync_api import sync_playwright
@@ -18,6 +19,7 @@ from playwright.sync_api import sync_playwright
 from src.core.config import settings
 from src.core.logger import Log
 from src.core.redis import REDIS_POOL
+from src.core.type import UserCancelledError
 from src.robot.ShigaToyoChiba.api import APISharePoint
 from src.robot.ShigaToyoChiba.automation import PowerApp, SharePoint, WebAccess
 
@@ -66,10 +68,15 @@ def Fname(path: str):
 
 @shared_task(bind=True, name="Shiga Toyo Chiba")
 def shiga_toyo_chiba(
-    self,
+    self: Task,
     process_date: datetime | str,
     up_trong: bool | str = False,
 ):
+    # ----- #
+    checker = redis.Redis(connection_pool=REDIS_POOL)
+    task_id = self.request.id
+    if checker.get(task_id) is not None:
+        raise UserCancelledError()
     if isinstance(up_trong, str):
         if up_trong.lower() == "false":
             up_trong = False
@@ -78,8 +85,7 @@ def shiga_toyo_chiba(
         else:
             up_trong = False
     # --- #
-    TaskID = self.request.id
-    logger = Log.get_logger(channel=TaskID, redis_client=redis.Redis(connection_pool=REDIS_POOL))
+    logger = Log.get_logger(channel=task_id, redis_client=redis.Redis(connection_pool=REDIS_POOL))
     with tempfile.TemporaryDirectory() as temp_dir:
         DataShigaUp_ItemID = None
         DataShigaUp_DriveID = None
@@ -98,11 +104,15 @@ def shiga_toyo_chiba(
         # ---- UP site
         UPSite = APIClient.get_site("UP")
         # ---- Upload File Data
+        if checker.get(task_id) is not None:
+            raise UserCancelledError()
         if not APIClient.download_item(
             site_id=UPSite.get("id"),
             breadcrumb=f"データUP一覧/{FileData}",
             save_to=os.path.join(temp_dir, FileData),
         ):
+            if checker.get(task_id) is not None:
+                raise UserCancelledError()
             logger.info("Download data from Access")
             with sync_playwright() as p:
                 browser = p.chromium.launch(headless=False, args=["--start-maximized"])
@@ -114,6 +124,8 @@ def shiga_toyo_chiba(
                     browser=browser,
                     context=context,
                 ) as wa:
+                    if checker.get(task_id) is not None:
+                        raise UserCancelledError()
                     orders = wa.download_data(process_date)
                     UploadStatus_Columns = [
                         "出荷工場",
@@ -145,6 +157,8 @@ def shiga_toyo_chiba(
                     orders = orders.sort_values(by="出荷工場").reset_index(drop=True)
                     orders.to_excel(os.path.join(temp_dir, FileData), index=False)
                     # Upload to SharePoint
+                    if checker.get(task_id) is not None:
+                        raise UserCancelledError()
                     item = APIClient.upload_item(
                         site_id=UPSite.get("id"),
                         breadcrumb="データUP一覧",
@@ -155,6 +169,8 @@ def shiga_toyo_chiba(
                     DataShigaUp_DriveID = item.get("parentReference").get("driveId")
                     DataShigaUp_SiteID = item.get("parentReference").get("siteId")
         else:
+            if checker.get(task_id) is not None:
+                raise UserCancelledError()
             item = APIClient.upload_item(
                 site_id=UPSite.get("id"),
                 breadcrumb="データUP一覧",
@@ -165,6 +181,8 @@ def shiga_toyo_chiba(
             DataShigaUp_DriveID = item.get("parentReference").get("driveId")
             DataShigaUp_SiteID = item.get("parentReference").get("siteId")
         # ---- Upload Data
+        if checker.get(task_id) is not None:
+            raise UserCancelledError()
         suffix_name = f"{process_date.strftime("%m-%d")}納材"
         with sync_playwright() as p:
             browser = p.chromium.launch(headless=False, args=["--start-maximized"])
@@ -186,7 +204,11 @@ def shiga_toyo_chiba(
                     context=context,
                 ) as pa,
             ):
+                if checker.get(task_id) is not None:
+                    raise UserCancelledError()
                 while True:
+                    if checker.get(task_id) is not None:
+                        raise UserCancelledError()
                     APIClient.download_item(
                         site_id=UPSite.get("id"),
                         breadcrumb=f"データUP一覧/{FileData}",
@@ -253,6 +275,8 @@ def shiga_toyo_chiba(
                             )
                             break
                         logger.info(row)
+                        if checker.get(task_id) is not None:
+                            raise UserCancelledError()
                         APIClient.write(
                             siteId=DataShigaUp_SiteID,
                             driveId=DataShigaUp_DriveID,
@@ -264,6 +288,8 @@ def shiga_toyo_chiba(
                         logger.info("Kiểm tra tên thư mục")
                         url = row["資料リンク"]
                         breadcrumb = sp.get_breadcrumb(url)
+                        if checker.get(task_id) is not None:
+                            raise UserCancelledError()
                         if breadcrumb[-1].endswith("納材"):
                             logger.warning("Tên folder có ghi ngày")
                             APIClient.write(
@@ -277,6 +303,8 @@ def shiga_toyo_chiba(
                         download_path = os.path.join(temp_dir, str(int(row["案件番号"])))
                         shutil.rmtree(download_path, ignore_errors=True)
                         logger.info("tải data")
+                        if checker.get(task_id) is not None:
+                            raise UserCancelledError()
                         downloads = sp.download(
                             url=url,
                             file=re.compile(r".*\.(xls|xlsx|xlsm|xlsb|xml|xlt|xltx|xltm|xlam|pdf)$", re.IGNORECASE),
@@ -293,6 +321,8 @@ def shiga_toyo_chiba(
                                 data=[["không đủ data"]],
                             )
                             break
+                        if checker.get(task_id) is not None:
+                            raise UserCancelledError()
                         if row["出荷工場"] not in ["滋賀", "豊橋", "千葉"]:
                             logger.warning("Lỗi: kiểm tra cột 出荷工場")
                             APIClient.write(
@@ -303,6 +333,8 @@ def shiga_toyo_chiba(
                                 data=[["Lỗi: kiểm tra cột 出荷工場"]],
                             )
                             break
+                        if checker.get(task_id) is not None:
+                            raise UserCancelledError()
                         logger.info("kiểm tra số lượng file")
                         # --- Kiểm tra số lượng file --- #
                         count_floor = len(row["階"].split(",")) if hasattr(row["階"], "split") else None
@@ -389,6 +421,8 @@ def shiga_toyo_chiba(
                             if os.listdir(download_path) == ["excel", "pdf"]:
                                 break
                         logger.info("chạy macro")
+                        if checker.get(task_id) is not None:
+                            raise UserCancelledError()
                         excel_files = glob.glob(
                             os.path.join(os.path.abspath(os.path.join(download_path, "excel")), "*")
                         )
@@ -458,6 +492,8 @@ def shiga_toyo_chiba(
                                     ),
                                     re.compile(r"^確定データ(\(.*\))?"),
                                 ]
+                            if checker.get(task_id) is not None:
+                                raise UserCancelledError()
                             if not sp.upload(
                                 url="https://nskkogyo.sharepoint.com/sites/shiga/Shared Documents/Forms/AllItems.aspx?id=/sites/shiga/Shared Documents/滋賀工場 製造データ",  # noqa
                                 files=upload_data,
@@ -485,6 +521,8 @@ def shiga_toyo_chiba(
                                     ),
                                     re.compile(r"^確定データ(\(.*\))?"),
                                 ]
+                            if checker.get(task_id) is not None:
+                                raise UserCancelledError()
                             if not sp.upload(
                                 url="https://nskkogyo.sharepoint.com/sites/toyohashi/Shared Documents/Forms/AllItems.aspx?id=/sites/toyohashi/Shared Documents/豊橋工場 製造データ",  # noqa
                                 files=upload_data,
@@ -512,6 +550,8 @@ def shiga_toyo_chiba(
                                     ),
                                     re.compile(r"^確定データ(\(.*\))?"),
                                 ]
+                            if checker.get(task_id) is not None:
+                                raise UserCancelledError()
                             if not sp.upload(
                                 url="https://nskkogyo.sharepoint.com/sites/nskhome/Shared Documents/Forms/AllItems.aspx?id=/sites/nskhome/Shared Documents/千葉工場 製造データ",  # noqa
                                 files=upload_data,
@@ -554,6 +594,8 @@ def shiga_toyo_chiba(
                             data=[["Chưa có trên Power App"]],
                         )
                         # --- #
+                        if checker.get(task_id) is not None:
+                            raise UserCancelledError()
                         up: bool = False
                         if row["出荷工場"] == "滋賀":  # Shiga
                             for p in list(
