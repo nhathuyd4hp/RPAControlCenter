@@ -61,7 +61,7 @@ class Kistarkoushin:
         logging.basicConfig(
             level=logging.INFO,
             format="%(asctime)s - %(levelname)s - %(message)s",
-            handlers=[logging.FileHandler(log_filename, encoding="utf-8"), logging.StreamHandler()],
+            handlers=[logging.FileHandler(log_filename, encoding="utf-8"), logging.StreamHandler(sys.stdout)],
         )
 
     def format_date(self, date):
