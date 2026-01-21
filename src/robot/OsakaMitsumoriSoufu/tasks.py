@@ -1,8 +1,12 @@
+import os
 import shutil
 import subprocess
 from pathlib import Path
 
 from celery import shared_task
+
+from src.core.config import settings
+from src.service import ResultService as minio
 
 
 @shared_task(bind=True, name="Osaka Mitsumori Soufu")
@@ -30,3 +34,20 @@ def OsakaMitsumoriSoufu(self):
     ankens_folder = cwd_path / "Ankens"
     for path in (logs_folder, access_token_folder, ankens_folder):
         shutil.rmtree(path, ignore_errors=True)
+
+    reports_folder = cwd_path / "ProgressReports"
+    latest_pdf: Path | None = max(
+        reports_folder.glob("*.xlsx"),
+        key=lambda p: p.stat().st_mtime,
+        default=None,
+    )
+    if not latest_pdf:
+        raise FileNotFoundError("ProgressReports: FileNotFound")
+
+    result = minio.fput_object(
+        bucket_name=settings.RESULT_BUCKET,
+        object_name=f"OsakaMitsumoriSoufu/{self.request.id}/{os.path.basename(latest_pdf)}.xlsx",
+        file_path=str(latest_pdf),
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    )
+    return f"{settings.RESULT_BUCKET}/{result.object_name}"
