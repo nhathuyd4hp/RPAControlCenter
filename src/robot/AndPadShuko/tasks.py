@@ -9,10 +9,10 @@ import redis
 from celery import shared_task
 from playwright.sync_api import sync_playwright
 
-from src.core.type import UserCancelledError
 from src.core.config import settings
 from src.core.logger import Log
 from src.core.redis import REDIS_POOL
+from src.core.type import UserCancelledError
 from src.robot.AndPadShuko.automation import MailDealer, WebAccess
 from src.service import ResultService as minio
 

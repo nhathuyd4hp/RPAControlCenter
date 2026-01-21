@@ -19,6 +19,7 @@ from playwright.sync_api import sync_playwright
 from src.core.config import settings
 from src.core.logger import Log
 from src.core.redis import REDIS_POOL
+from src.core.type import UserCancelledError
 from src.robot.KyushuOsaka.api import APISharePoint
 from src.robot.KyushuOsaka.automation import PowerApp, SharePoint
 
@@ -76,7 +77,11 @@ def kyushu_osaka(
     osaka: bool | str = True,
     up_trong: bool | str = False,
 ):
+    # ----- #
+    checker = redis.Redis(connection_pool=REDIS_POOL)
     TaskID = self.request.id
+    if checker.get(TaskID) is not None:
+        raise UserCancelledError()
     logger = Log.get_logger(channel=TaskID, redis_client=redis.Redis(connection_pool=REDIS_POOL))
     logger.info(f"Upload Kyushu-Osaka: {process_date}")
     # Xử lí đầu vào
@@ -171,6 +176,8 @@ def kyushu_osaka(
         "item_id": item_id,
         "item_name": item_name,
     }
+    if checker.get(TaskID) is not None:
+        raise UserCancelledError()
     with sync_playwright() as p:
         browser = p.chromium.launch(
             headless=False,
@@ -198,6 +205,8 @@ def kyushu_osaka(
             tempfile.TemporaryDirectory() as temp_dir,
         ):
             while True:
+                if checker.get(TaskID) is not None:
+                    raise UserCancelledError()
                 drive_id, _ = api.download_item(
                     site_id=file.get("site_id"),
                     breadcrumb=f"データUP一覧/{int(process_date.month)}月{int(process_date.day)}日/{file.get("item_name")}",
@@ -213,6 +222,8 @@ def kyushu_osaka(
                     return
                 suffix_name = f"{process_date.strftime("%m-%d")}納材"
                 for index, row in data.iterrows():
+                    if checker.get(TaskID) is not None:
+                        raise UserCancelledError()
                     logger.info(f"Index: {index}")
                     api.write(
                         site_id=file.get("site_id"),
@@ -403,6 +414,8 @@ def kyushu_osaka(
                             sheet="データUP状況",
                         )
                         break
+                    if checker.get(TaskID) is not None:
+                        raise UserCancelledError()
                     logger.info("Up data")
                     if row["出荷工場"] == "九州":
                         path = [
@@ -482,6 +495,8 @@ def kyushu_osaka(
                         )
                     if row["出荷工場"] == "大阪":
                         break  # Osaka không nhấn app
+                    if checker.get(TaskID) is not None:
+                        raise UserCancelledError()
                     logger.info("Nhấn app")
                     for building in list(
                         set(

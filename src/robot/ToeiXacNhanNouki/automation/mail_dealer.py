@@ -317,7 +317,7 @@ class MailDealer:
                     案件ID=案件ID,
                     このメールと同じ親番号のメールをすべて関連付ける=このメールと同じ親番号のメールをすべて関連付ける,
                 )
-            except ElementClickInterceptedException:
+            except ElementClickInterceptedException as e:
                 return False, str(e)
         except StaleElementReferenceException:
             return self.一括操作(
