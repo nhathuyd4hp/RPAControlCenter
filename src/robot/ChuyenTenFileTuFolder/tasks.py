@@ -47,7 +47,7 @@ def main(
         sync_playwright() as p,
         tempfile.TemporaryDirectory() as temp_dir,
     ):
-        browser = p.chromium.launch(headless=False, args=["--start-maximized"])
+        browser = p.chromium.launch(headless=True, args=["--start-maximized"])
         context = browser.new_context(no_viewport=True)
         logger.info("login sharepoint")
         with SharePoint(
@@ -71,12 +71,15 @@ def main(
             files = [os.path.basename(file) for file in files]
             for i, file in enumerate(files):
                 if match := re.search(r"＿(.*?)＿", file):
-                    files[i] = match.group(1)
+                    file = match.group(1)
+                file = re.sub(r"\([^)]*(am|pm)[^)]*\)", "", file, flags=re.IGNORECASE)
+                files[i] = file
+
             result_path = os.path.join(temp_dir, "filenames.xlsx")
             pd.DataFrame({"filename": files}).to_excel(result_path, index=False)
             result = minio.fput_object(
                 bucket_name=settings.RESULT_BUCKET,
-                object_name=f"ChuyenTenFileTuFolder/{task_id}/data.xlsx",
+                object_name=f"ChuyenTenFileTuFolder/{task_id}/{factory}.xlsx",
                 file_path=result_path,
                 content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             )
