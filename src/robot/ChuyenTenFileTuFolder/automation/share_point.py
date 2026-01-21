@@ -1,8 +1,10 @@
 import contextlib
-import os
 import logging
+import os
 import re
+import sys
 import time
+import traceback
 from typing import List
 
 from playwright._impl._errors import TimeoutError
@@ -146,8 +148,10 @@ class SharePoint:
                 downloads.append(save_path)
                 self.logger.info(f"Save {save_path}")
             return downloads
-        except TimeoutError:
-            self.logger.warning("RETRY")
+        except TimeoutError as e:
+            tb = traceback.extract_tb(sys.exc_info()[2])
+            last = tb[-1]
+            self.logger.warning(f"RETRY at {last.filename}:{last.lineno} -> {last.name} | {e}")
             if self.page.locator("div[id='ms-error-content']").count() == 1:
                 notification: str = (
                     self.page.locator("div[id='ms-error-content']").text_content().strip().split("\n")[0]
