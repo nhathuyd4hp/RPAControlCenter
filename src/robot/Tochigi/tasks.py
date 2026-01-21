@@ -21,6 +21,7 @@ from pywinauto.application import Application, WindowSpecification
 from src.core.config import settings
 from src.core.logger import Log
 from src.core.redis import REDIS_POOL
+from src.core.type import UserCancelledError
 from src.robot.Tochigi.api import APISharePoint
 from src.robot.Tochigi.automation import SharePoint, WebAccess
 
@@ -159,7 +160,10 @@ def tochigi(self, process_date: datetime | str):
     if isinstance(process_date, str):
         process_date = datetime.strptime(process_date, "%Y-%m-%d %H:%M:%S.%f").date()
     # ----- #
+    checker = redis.Redis(connection_pool=REDIS_POOL)
     TaskID = self.request.id
+    if checker.get(TaskID) is not None:
+        raise UserCancelledError()
     logger = Log.get_logger(channel=TaskID, redis_client=redis.Redis(connection_pool=REDIS_POOL))
     logger.info(f"Upload Tochigi: {process_date}")
     # ----- Resource File ----- #
@@ -179,6 +183,8 @@ def tochigi(self, process_date: datetime | str):
             ) as sp,
             tempfile.TemporaryDirectory() as temp_dir,
         ):
+            if checker.get(TaskID) is not None:
+                raise UserCancelledError()
             _, month, day = str(process_date).split("-")
             DataTochigi = os.path.join(temp_dir, f"DataTochigi{process_date}.xlsx")
             api = APISharePoint(
@@ -195,8 +201,9 @@ def tochigi(self, process_date: datetime | str):
                 breadcrumb=f"データUP一覧/{os.path.basename(DataTochigi)}",
                 save_to=os.path.join(temp_dir, f"DataTochigi{process_date}.xlsx"),
             )
-
             if Uploaded:
+                if checker.get(TaskID) is not None:
+                    raise UserCancelledError()
                 DataTochigi_Upload = api.upload_item(
                     site_id=UP.get("id"),
                     local_path=os.path.join(temp_dir, f"DataTochigi{process_date}.xlsx"),
@@ -206,6 +213,8 @@ def tochigi(self, process_date: datetime | str):
                 DataTochigi_DriveID = DataTochigi_Upload.get("parentReference").get("driveId")
                 DataTochigi_SiteID = DataTochigi_Upload.get("parentReference").get("siteId")
             else:
+                if checker.get(TaskID) is not None:
+                    raise UserCancelledError()
                 logger.info("Download data")
                 data = WebAccess(
                     username=settings.WEBACCESS_USERNAME,
@@ -233,6 +242,8 @@ def tochigi(self, process_date: datetime | str):
 
             # Xử lí từng dòng
             while True:
+                if checker.get(TaskID) is not None:
+                    raise UserCancelledError()
                 api.download_item(
                     site_id=UP.get("id"),
                     breadcrumb=f"データUP一覧/{os.path.basename(DataTochigi)}",
@@ -242,6 +253,8 @@ def tochigi(self, process_date: datetime | str):
                 if data["R_Status"].notna().all():
                     break
                 for upload_file_index, row in data.iterrows():
+                    if checker.get(TaskID) is not None:
+                        raise UserCancelledError()
                     if pd.notna(row["R_Status"]):
                         continue
                     # ---- Đánh dấu bot đang xử lí dòng/bài này ----

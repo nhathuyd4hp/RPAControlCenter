@@ -6,5 +6,5 @@ class InactiveTask(Task):
 
     def __call__(self, *args, **kwargs):
         if self.active is not True:
-            raise RuntimeError("Inactive Task")
+            raise RuntimeError("Inactive Robot")
         return super().__call__(*args, **kwargs)
