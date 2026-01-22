@@ -111,6 +111,26 @@ class SharePoint:
                 ).wait_for(
                     state="visible",
                 )
+            self.page.locator(selector="div[aria-label='Type'][role='button']").click()
+            self.page.locator(selector="span", has_text="Filter by").click()
+            self.page.locator("div[class^='ms-Panel-commands']").wait_for(state="visible")
+            time.sleep(1)
+            # ----- #
+            extensions = []
+            with contextlib.suppress(AttributeError):
+                extensions = re.search(r"\(([^)]+)\)", file.pattern).group(1).split("|")
+            selectors = [f"input[type='checkbox'][title='{ext}']" for ext in extensions]
+            final_selector = ",".join(selectors)
+            checkboxes = self.page.locator(final_selector)
+            for i in range(checkboxes.count()):
+                checkbox = checkboxes.nth(i)
+                while True:
+                    if checkbox.is_checked():
+                        break
+                    checkbox.check()
+            self.page.locator("button[data-automationid='FilterPanel-Apply']").click()
+            with contextlib.suppress(TimeoutError):
+                self.page.locator("div[class^='ms-Panel-commands']").wait_for(state="hidden", timeout=15000)
             with contextlib.suppress(TimeoutError):
                 self.page.locator(
                     selector="span[role='button'][data-id='heroField']",
@@ -149,7 +169,6 @@ class SharePoint:
                 download.save_as(save_path)
                 downloads.append(save_path)
                 self.logger.info(f"Save {save_path}")
-                time.sleep(0.5)
             return downloads
         except TimeoutError as e:
             tb = traceback.extract_tb(sys.exc_info()[2])

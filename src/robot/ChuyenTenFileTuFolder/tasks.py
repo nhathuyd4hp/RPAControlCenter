@@ -74,7 +74,7 @@ def main(
                     file = match.group(1)
                 file = re.sub(r"\([^)]*(am|pm)[^)]*\)", "", file, flags=re.IGNORECASE)
                 files[i] = file
-
+            logger.info(f"[Scan] Total files found: {len(files)}")
             result_path = os.path.join(temp_dir, "filenames.xlsx")
             pd.DataFrame({"filename": files}).to_excel(result_path, index=False)
             result = minio.fput_object(
