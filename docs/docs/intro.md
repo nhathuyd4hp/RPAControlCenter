@@ -2,46 +2,84 @@
 sidebar_position: 1
 ---
 
-# Tutorial Intro
+# RPA Control Center
 
-Let's discover **Docusaurus in less than 5 minutes**.
+## 🛠 Công nghệ sử dụng
 
-## Getting Started
+| Thành phần | Công nghệ |
+| :--- | :--- |
+| **Core** | [Python 3.10+](https://www.python.org/) & [FastAPI](https://fastapi.tiangolo.com/)
+| **Task Queue** | [Celery](https://docs.celeryq.dev/) & [Redis](https://redis.io/)
+| **Database** | [MySQL](https://www.mysql.com/)
+| **Migration** | [Alembic](https://alembic.sqlalchemy.org/)
+| **Real-time** | [Socket.IO](https://socket.io/)
+| **Package Manager** | [uv](https://github.com/astral-sh/uv)
+| **Plugin ** | C++
+## 🚀 Cài đặt & Chạy dự án
 
-Get started by **creating a new site**.
+### 1. Yêu cầu tiên quyết
 
-Or **try Docusaurus immediately** with **[docusaurus.new](https://docusaurus.new)**.
+Đảm bảo máy tính của bạn đã cài đặt:
 
-### What you'll need
+*   [Python 3.10+](https://www.python.org/)
+*   [Docker](https://www.docker.com/) & Docker Compose
+*   [uv](https://github.com/astral-sh/uv)
 
-- [Node.js](https://nodejs.org/en/download/) version 20.0 or above:
-  - When installing Node.js, you are recommended to check all checkboxes related to dependencies.
+### 2. Thiết lập môi trường
 
-## Generate a new site
-
-Generate a new Docusaurus site using the **classic template**.
-
-The classic template will automatically be added to your project after you run the command:
-
-```bash
-npm init docusaurus@latest my-website classic
-```
-
-You can type this command into Command Prompt, Powershell, Terminal, or any other integrated terminal of your code editor.
-
-The command also installs all necessary dependencies you need to run Docusaurus.
-
-## Start your site
-
-Run the development server:
+**Bước 1: Clone dự án**
 
 ```bash
-cd my-website
-npm run start
+git clone <repository_url>
+cd TaskDistribution
 ```
 
-The `cd` command changes the directory you're working with. In order to work with your newly created Docusaurus site, you'll need to navigate the terminal there.
+**Bước 2: Cấu hình biến môi trường**
 
-The `npm run start` command builds your website locally and serves it through a development server, ready for you to view at http://localhost:3000/.
+Copy file cấu hình mẫu và cập nhật thông tin kết nối (Database, Redis, v.v.):
 
-Open `docs/intro.md` (this page) and edit some lines: the site **reloads automatically** and displays your changes.
+```bash
+cp .env.example .env
+```
+
+**Bước 3: Cài đặt thư viện**
+
+Sử dụng `uv` để cài đặt các dependencies nhanh chóng:
+
+```bash
+uv sync
+```
+
+### 3. Khởi chạy Database & Services
+
+Sử dụng Docker để khởi chạy Redis và MySQL (nếu chưa có sẵn):
+
+```bash
+docker-compose up -d
+```
+
+Chạy migration để khởi tạo cấu trúc database:
+
+```bash
+alembic upgrade head
+```
+
+### 4. Chạy ứng dụng
+
+Khởi chạy API Server:
+
+```bash
+uv run uvicorn main:app --reload
+```
+
+Khởi chạy Celery Worker (trên terminal khác):
+
+```bash
+uv run celery -A worker.celery_app worker --loglevel=info
+```
+
+## 📚 Tài liệu API
+
+Sau khi server khởi chạy thành công, bạn có thể truy cập:
+
+*   **Documentaion:** `https://nhathuyd4hp.github.io/RPAControlCenter/`

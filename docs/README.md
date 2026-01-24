@@ -1,41 +1,81 @@
-# Website
+# RPA Control Center
 
-This website is built using [Docusaurus](https://docusaurus.io/), a modern static website generator.
+## 🛠 Công nghệ sử dụng
 
-## Installation
+| Thành phần | Công nghệ |
+| :--- | :--- |
+| **Core** | [Python 3.10+](https://www.python.org/) & [FastAPI](https://fastapi.tiangolo.com/)
+| **Task Queue** | [Celery](https://docs.celeryq.dev/) & [Redis](https://redis.io/)
+| **Database** | [MySQL](https://www.mysql.com/)
+| **Migration** | [Alembic](https://alembic.sqlalchemy.org/)
+| **Real-time** | [Socket.IO](https://socket.io/)
+| **Package Manager** | [uv](https://github.com/astral-sh/uv)
+| **Plugin ** | C++
+## 🚀 Cài đặt & Chạy dự án
 
-```bash
-yarn
-```
+### 1. Yêu cầu tiên quyết
 
-## Local Development
+Đảm bảo máy tính của bạn đã cài đặt:
 
-```bash
-yarn start
-```
+*   [Python 3.10+](https://www.python.org/)
+*   [Docker](https://www.docker.com/) & Docker Compose
+*   [uv](https://github.com/astral-sh/uv)
 
-This command starts a local development server and opens up a browser window. Most changes are reflected live without having to restart the server.
+### 2. Thiết lập môi trường
 
-## Build
-
-```bash
-yarn build
-```
-
-This command generates static content into the `build` directory and can be served using any static contents hosting service.
-
-## Deployment
-
-Using SSH:
+**Bước 1: Clone dự án**
 
 ```bash
-USE_SSH=true yarn deploy
+git clone <repository_url>
+cd TaskDistribution
 ```
 
-Not using SSH:
+**Bước 2: Cấu hình biến môi trường**
+
+Copy file cấu hình mẫu và cập nhật thông tin kết nối (Database, Redis, v.v.):
 
 ```bash
-GIT_USER=<Your GitHub username> yarn deploy
+cp .env.example .env
 ```
 
-If you are using GitHub pages for hosting, this command is a convenient way to build the website and push to the `gh-pages` branch.
+**Bước 3: Cài đặt thư viện**
+
+Sử dụng `uv` để cài đặt các dependencies nhanh chóng:
+
+```bash
+uv sync
+```
+
+### 3. Khởi chạy Database & Services
+
+Sử dụng Docker để khởi chạy Redis và MySQL (nếu chưa có sẵn):
+
+```bash
+docker-compose up -d
+```
+
+Chạy migration để khởi tạo cấu trúc database:
+
+```bash
+alembic upgrade head
+```
+
+### 4. Chạy ứng dụng
+
+Khởi chạy API Server:
+
+```bash
+uv run uvicorn main:app --reload
+```
+
+Khởi chạy Celery Worker (trên terminal khác):
+
+```bash
+uv run celery -A worker.celery_app worker --loglevel=info
+```
+
+## 📚 Tài liệu API
+
+Sau khi server khởi chạy thành công, bạn có thể truy cập:
+
+*   **Documentaion:** `https://nhathuyd4hp.github.io/RPAControlCenter/`
