@@ -1,3 +1,4 @@
+import zipfile
 import contextlib
 import io
 import os
@@ -71,3 +72,24 @@ def Zenbu(
                 p.unlink()
             if p.is_dir():
                 shutil.rmtree(p)
+    # ----- Zip ----- #
+    paths = [
+        exe_path.parent / "Ankens",
+        exe_path.parent / "ProgressReports",
+    ]
+    zip_path = exe_path / "Zenbu.zip"
+    with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zipf:
+        for folder in paths:
+            for root, _, files in os.walk(folder):
+                for file in files:
+                    full_path = Path(root) / file
+                    arcname = full_path.relative_to(exe_path)
+                    zipf.write(full_path, arcname)
+    result = minio.fput_object(
+        bucket_name=settings.RESULT_BUCKET,
+        object_name=f"Zenbu/{self.request.id}/Zenbu.zip",
+        file_path=str(zip_path),
+        file_path=str(zip_path),
+        content_type="application/zip",
+    )
+    return f"{settings.RESULT_BUCKET}/{result.object_name}"
