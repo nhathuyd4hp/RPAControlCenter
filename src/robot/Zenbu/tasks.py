@@ -1,10 +1,10 @@
-import zipfile
 import contextlib
 import io
 import os
 import shutil
 import subprocess
 import sys
+import zipfile
 from pathlib import Path
 
 from celery import shared_task
@@ -59,6 +59,7 @@ def Zenbu(
             encoding="utf-8",
         )
         process.wait()
+
     paths = [
         exe_path.parent / "Access_token",
         exe_path.parent / "Logs",

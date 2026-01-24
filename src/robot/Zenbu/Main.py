@@ -60,6 +60,7 @@ def load_values():
 
 def read_excel_file(file_path):
     try:
+        print(f"Reading Excel file: {file_path}")
         df = pd.read_excel(file_path, dtype=str)
         if "Anken Number" in df.columns and "Builder Code" in df.columns:
             anken_data = df["Anken Number"]
