@@ -216,6 +216,6 @@ if __name__ == "__main__":
 
     root.after(5000, read_excel_file, args.file)
 
-    root.after(10000, read_excel_file, start_button.invoke)
+    root.after(10000, start_button.invoke)
 
     root.mainloop()
