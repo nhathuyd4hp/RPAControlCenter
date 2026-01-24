@@ -84,7 +84,7 @@ def Zenbu(
             for root, _, files in os.walk(folder):
                 for file in files:
                     full_path = Path(root) / file
-                    arcname = full_path.relative_to(exe_path)
+                    arcname = full_path.relative_to(exe_path.parent)
                     zipf.write(full_path, arcname)
     result = minio.fput_object(
         bucket_name=settings.RESULT_BUCKET,
