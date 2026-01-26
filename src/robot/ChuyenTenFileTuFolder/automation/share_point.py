@@ -5,6 +5,7 @@ import re
 import sys
 import time
 import traceback
+import zipfile
 from typing import List
 
 from playwright._impl._errors import TimeoutError
@@ -82,7 +83,6 @@ class SharePoint:
         steps: List[str | re.Pattern] | None = None,
         save_to: str | None = None,
     ) -> List[str]:
-        downloads = []
         self.logger.info(f"Download {file} - {url}")
         try:
             self.page.bring_to_front()
@@ -111,10 +111,26 @@ class SharePoint:
                 ).wait_for(
                     state="visible",
                 )
+            # ----- Loading data ---- #
+            with contextlib.suppress(TimeoutError):
+                self.page.locator(
+                    selector="span[role='button'][data-id='heroField']",
+                    has_text=file,
+                ).first.wait_for(timeout=5000, state="visible")
+            prev_height = 0
+            grid = self.page.locator("div[data-automationid='spgrid']")
+            while True:
+                height = grid.evaluate("el => el.scrollHeight")
+                if height == prev_height:
+                    break
+                prev_height = height
+                grid.evaluate("el => el.scrollTop = el.scrollHeight")
+                self.page.wait_for_timeout(5000)
+            # ----- Apply filter ---- #
             self.page.locator(selector="div[aria-label='Type'][role='button']").click()
             self.page.locator(selector="span", has_text="Filter by").click()
             self.page.locator("div[class^='ms-Panel-commands']").wait_for(state="visible")
-            time.sleep(1)
+            time.sleep(2.5)
             # ----- #
             extensions = []
             with contextlib.suppress(AttributeError):
@@ -129,37 +145,39 @@ class SharePoint:
                         break
                     checkbox.check()
             self.page.locator("button[data-automationid='FilterPanel-Apply']").click()
-            with contextlib.suppress(TimeoutError):
-                self.page.locator("div[class^='ms-Panel-commands']").wait_for(state="hidden", timeout=15000)
+            self.page.locator("div[class^='ms-Panel-commands']").wait_for(state="hidden", timeout=15000)
+            # ----- #
             with contextlib.suppress(TimeoutError):
                 self.page.locator(
                     selector="span[role='button'][data-id='heroField']",
                     has_text=file,
                 ).first.wait_for(timeout=5000, state="visible")
-                prev_height = 0
-                grid = self.page.locator("div[data-automationid='spgrid']")
-                while True:
-                    height = grid.evaluate("el => el.scrollHeight")
-                    if height == prev_height:
-                        break
-                    prev_height = height
-                    grid.evaluate("el => el.scrollTop = el.scrollHeight")
-                    self.page.wait_for_timeout(5000)
+            prev_height = 0
+            grid = self.page.locator("div[data-automationid='spgrid']")
+            while True:
+                height = grid.evaluate("el => el.scrollHeight")
+                if height == prev_height:
+                    break
+                prev_height = height
+                grid.evaluate("el => el.scrollTop = el.scrollHeight")
+                self.page.wait_for_timeout(5000)
             items = self.page.locator(
                 selector="span[role='button'][data-id='heroField']",
                 has_text=file,
             )
-            self.logger.info(f"[Scan] Total files found: {len(items.count())}")
-            for i in range(items.count()):
-                item = items.nth(i)
-                item.scroll_into_view_if_needed()
-                item.click(button="right")
-                download_btn = self.page.locator(
-                    "button[data-automationid='downloadCommand'][role='menuitem']:not([type='button'])"
-                )
-                download_btn.wait_for(state="visible")
+            self.logger.info(f"[Scan] Total files found: {items.count()}")
+            while True:
+                if (
+                    self.page.locator(
+                        selector="div[tag='columnheader'][data-automationid='row-selection-header']"
+                    ).get_attribute("aria-selected")
+                    == "true"
+                ):
+                    break
+                time.sleep(0.5)
+                self.page.locator(selector="div[tag='columnheader'][data-automationid='row-selection-header']").click()
                 with self.page.expect_download() as download_info:
-                    download_btn.click()
+                    self.page.locator(selector="button[data-automationid='downloadCommand']").click()
                 download = download_info.value
                 if save_to:
                     save_path = os.path.join(save_to, download.suggested_filename)
@@ -167,9 +185,11 @@ class SharePoint:
                     save_path = os.path.abspath(download.suggested_filename)
                 os.makedirs(os.path.dirname(save_path), exist_ok=True)
                 download.save_as(save_path)
-                downloads.append(save_path)
                 self.logger.info(f"Save {save_path}")
-            return downloads
+                with zipfile.ZipFile(save_path, "r") as zip_ref:
+                    zip_ref.extractall(save_to)
+                os.remove(save_path)
+            return os.listdir(save_to)
         except TimeoutError as e:
             tb = traceback.extract_tb(sys.exc_info()[2])
             last = tb[-1]
