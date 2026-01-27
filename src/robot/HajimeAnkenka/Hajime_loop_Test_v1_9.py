@@ -1,3 +1,4 @@
+import argparse
 import logging
 import os
 import re
@@ -5,7 +6,7 @@ import shutil
 import stat
 import sys
 import time
-from datetime import datetime
+from pathlib import Path
 
 import openpyxl
 import win32com.client
@@ -24,20 +25,20 @@ from selenium.webdriver.support.ui import WebDriverWait
 for handler in logging.root.handlers[:]:
     logging.root.removeHandler(handler)
 
-log_dir = os.path.join(os.getcwd(), "Hajime_shinki_bot_logs")
-current_time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-log_file_path = os.path.join(log_dir, f"{current_time}.log")
 
-if not os.path.exists(log_dir):
-    os.makedirs(log_dir)
-    print(f"Log folder created: {log_dir}")
+parser = argparse.ArgumentParser()
+parser.add_argument("--task-id", required=True)
+args = parser.parse_args()
+task_id = args.task_id
+log_path = Path(Path(__file__).resolve().parent).parent.parent.parent / "logs" / f"{task_id}.log"
+log_path.parent.mkdir(parents=True, exist_ok=True)
 
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(name)s  - %(levelname)s - %(message)s",
-    handlers=[logging.FileHandler(f"{log_file_path}"), logging.StreamHandler(sys.stdout)],
+    handlers=[logging.FileHandler(str(log_path))],
 )
-logging.info(f"Log file created: {log_file_path}")
+logging.info(f"Log file created: {log_path}")
 
 # Replace with your actual file path
 file_path = os.path.join(os.getcwd(), "Access_token", "Access_token.txt")
