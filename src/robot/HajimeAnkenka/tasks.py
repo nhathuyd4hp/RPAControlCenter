@@ -3,11 +3,14 @@ import subprocess
 import sys
 from pathlib import Path
 
+import redis
 from celery import shared_task
 from celery.app.task import Context, Task
 
 from src.core.config import settings
 from src.core.inactive_task import InactiveTask
+from src.core.logger import Log
+from src.core.redis import REDIS_POOL
 from src.service import ResultService as minio
 
 
@@ -15,6 +18,7 @@ from src.service import ResultService as minio
 def HajimeAnkenka(self: Task):
     context: Context = self.request
     id = context.id
+    logger = Log.get_logger(channel=id, redis_client=redis.Redis(connection_pool=REDIS_POOL))
 
     log_dir = Path(__file__).resolve().parents[3] / "logs"
     log_dir.mkdir(parents=True, exist_ok=True)
@@ -51,9 +55,12 @@ def HajimeAnkenka(self: Task):
     ]
 
     for path in paths:
-        if path.is_dir():
-            shutil.rmtree(path, ignore_errors=True)
-        if path.is_file():
-            path.unlink(missing_ok=True)
+        try:
+            if path.is_dir():
+                shutil.rmtree(path, ignore_errors=True)
+            if path.is_file():
+                path.unlink(missing_ok=True)
+        except Exception as e:
+            logger.error(e)
 
     return f"{settings.RESULT_BUCKET}/{result.object_name}"

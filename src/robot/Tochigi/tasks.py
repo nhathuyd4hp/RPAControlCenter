@@ -7,6 +7,7 @@ import threading
 import time
 from contextlib import suppress
 from datetime import datetime
+from pathlib import Path
 
 import pandas as pd
 import redis
@@ -367,25 +368,25 @@ def tochigi(self, process_date: datetime | str):
                                     break
                                 time.sleep(0.5)
                             break
-                        pdf_dir = os.path.join(temp_dir, f"downloads/{案件番号}/pdf")
-                        excel_dir = os.path.join(temp_dir, f"downloads/{案件番号}/excel")
-                        os.makedirs(name=pdf_dir, exist_ok=True)
-                        os.makedirs(name=excel_dir, exist_ok=True)
+                        pdf_dir = Path(temp_dir) / "downloads" / str(案件番号) / "pdf"
+                        excel_dir = Path(temp_dir) / "downloads" / str(案件番号) / "excel"
+                        pdf_dir.mkdir(parents=True, exist_ok=True)
+                        excel_dir.mkdir(parents=True, exist_ok=True)
 
                         temp: list[str] = []
                         for filepath in downloads:
                             filename = os.path.basename(filepath)
                             ext = os.path.splitext(filename)[1].lower()
                             if ext == ".pdf":
-                                new_path = os.path.join(pdf_dir, filename)
+                                new_path = os.path.join(str(pdf_dir), filename)
                                 shutil.move(filepath, new_path)
                                 temp.append(new_path)
                             elif ext in excel_exts:
-                                new_path = os.path.join(excel_dir, filename)
+                                new_path = os.path.join(str(excel_dir), filename)
                                 shutil.move(filepath, new_path)
                                 temp.append(new_path)
                         logger.info("Chạy macro")
-                        excel_files = glob.glob(os.path.join(excel_dir, "*"))
+                        excel_files = glob.glob(os.path.join(str(excel_dir), "*"))
                         for file_path in excel_files:
                             if os.path.isfile(file_path):
                                 logger.info(f"File: {os.path.basename(file_path)}")
@@ -400,7 +401,7 @@ def tochigi(self, process_date: datetime | str):
                                             app = Application(backend="win32").connect(handle=win.handle)
                                             dialog = app.window(handle=win.handle)
                                             dialog.close()
-                                threading.Thread(target=Fname, args=(excel_dir,)).start()
+                                threading.Thread(target=Fname, args=(str(excel_dir),)).start()
                                 wb_macro.macro("Fname")()
                                 # Fopen
                                 wb_macro.macro("Fopen")()
@@ -441,8 +442,8 @@ def tochigi(self, process_date: datetime | str):
                                 re.compile("^栃木工場確定データ$"),
                             ],
                             files=(
-                                [os.path.join(pdf_dir, f) for f in os.listdir(pdf_dir)]
-                                + [os.path.join(excel_dir, f) for f in os.listdir(excel_dir)]
+                                [os.path.join(str(pdf_dir), f) for f in os.listdir(str(pdf_dir))]
+                                + [os.path.join(str(excel_dir), f) for f in os.listdir(str(excel_dir))]
                             ),
                         )
                         while True:
@@ -471,8 +472,6 @@ def tochigi(self, process_date: datetime | str):
                                 ):
                                     break
                                 time.sleep(0.5)
-                        shutil.rmtree(pdf_dir, ignore_errors=True)
-                        shutil.rmtree(excel_dir, ignore_errors=True)
                         break
                     break
 
