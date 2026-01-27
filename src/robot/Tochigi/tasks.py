@@ -328,9 +328,22 @@ def tochigi(self, process_date: datetime | str):
                         has_pdf = any(f.lower().endswith(".pdf") for f in counts)
                         excel_exts = (".xls", ".xlsx", ".xlsm", ".xlsb", ".xlt", ".xltx", ".xltm")
                         excel_count = sum(1 for f in counts if f.lower().endswith(excel_exts))
-                        if not has_pdf:
+                        if len(counts) == 0:
+                            logger.warning("Không đủ data")
                             while True:
-                                logger.warning("Không đủ data")
+                                if api.write(
+                                    site_id=DataTochigi_SiteID,
+                                    drive_id=DataTochigi_DriveID,
+                                    item_id=DataTochigi_ItemID,
+                                    range=f"G{upload_file_index+2}",
+                                    data=[["Không có data"]],
+                                ):
+                                    break
+                                time.sleep(0.5)
+                            break
+                        if not has_pdf:
+                            logger.warning("Không có PDF")
+                            while True:
                                 if api.write(
                                     site_id=DataTochigi_SiteID,
                                     drive_id=DataTochigi_DriveID,
@@ -342,8 +355,8 @@ def tochigi(self, process_date: datetime | str):
                                 time.sleep(0.5)
                             break
                         if excel_count < floors:
+                            logger.warning(f"{excel_count} excels /{floors}")
                             while True:
-                                logger.warning("Không đủ data")
                                 if api.write(
                                     site_id=DataTochigi_SiteID,
                                     drive_id=DataTochigi_DriveID,
