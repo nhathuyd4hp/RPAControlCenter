@@ -51,6 +51,7 @@ def HajimeAnkenka(self: Task):
     paths = [
         exe_path.parent / "Access_token",
         exe_path.parent / "Hajime_shinki_bot_logs",
+        exe_path.parent / "Ankens",
         exe_path.parent / "Access_token_log.txt",
     ]
 
