@@ -34,3 +34,4 @@ from src.robot.HajimeAnkenka import tasks  # noqa
 from src.robot.KizukuNoukikakunin import tasks  # noqa
 from src.robot.KenshinYamahaZumenSoufu import tasks  # noqa
 from src.robot.Andoli import tasks  # noqa
+from src.robot.AsahiZumenSoufu import tasks  # noqa
