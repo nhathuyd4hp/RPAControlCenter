@@ -1,7 +1,10 @@
 import io
 import os
+import shutil
 import subprocess
 import sys
+import tempfile
+import zipfile
 from pathlib import Path
 
 from celery import shared_task
@@ -56,4 +59,31 @@ def main(self: Task, file: io.BytesIO | str = "xlsx"):
         content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     )
 
-    return f"{settings.RESULT_BUCKET}/{result.object_name}"
+    logs_folder = exe_path.parent / "Logs"
+    access_token_folder = exe_path.parent / "Access_token"
+    download_folder = exe_path.parent / "Downloaded_Zumen"
+    for path in (logs_folder, access_token_folder, download_folder):
+        shutil.rmtree(path, ignore_errors=True)
+
+    ProgressReports = exe_path.parent / "ProgressReports"
+    latest_pdf: Path | None = max(
+        ProgressReports.glob("*.xlsx"),
+        key=lambda p: p.stat().st_mtime,
+        default=None,
+    )
+    if not latest_pdf:
+        raise FileNotFoundError("ProgressReports: FileNotFound")
+
+    with tempfile.TemporaryDirectory() as temp_dir:
+        temp_zip_path = Path(temp_dir) / "result.zip"
+        with zipfile.ZipFile(temp_zip_path, mode="w", compression=zipfile.ZIP_DEFLATED) as archive:
+            archive.write(new_path, arcname=new_path.name)
+            archive.write(latest_pdf, arcname=latest_pdf.name)
+        object_name = f"KenshinYamahaZumenSoufu/{self.request.id}/report.zip"
+        result = minio.fput_object(
+            bucket_name=settings.RESULT_BUCKET,
+            object_name=object_name,
+            file_path=str(temp_zip_path),
+            content_type="application/zip",
+        )
+        return f"{settings.RESULT_BUCKET}/{result.object_name}"
