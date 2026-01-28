@@ -16,7 +16,7 @@ from src.service import StorageService as minio
 @shared_task(bind=True, name="Zenbu")
 def Zenbu(
     self,
-    file: io.BytesIO | str = "Zenbu",
+    file: io.BytesIO | str = "xlsm",
 ):
     if file == "null":
         raise ValueError("Chỉ chấp nhận file định dạng .xlsm")

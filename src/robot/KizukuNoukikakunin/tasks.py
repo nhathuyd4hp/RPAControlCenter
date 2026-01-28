@@ -17,7 +17,7 @@ from src.service import StorageService as minio
 )
 def KizukuNoukikakunin(
     self: Task,
-    file: io.BytesIO | str = "Kizuku Noukikakunin",
+    file: io.BytesIO | str = "xlsx",
 ):
     # ----- Metadata -----#
     context: Context = self.request

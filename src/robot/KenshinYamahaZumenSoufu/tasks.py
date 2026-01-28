@@ -12,7 +12,7 @@ from src.service import StorageService as minio
 
 
 @shared_task(bind=True, name="Kenshin Yamaha Zumen Soufu")
-def main(self: Task, file: io.BytesIO | str = ".xlsx"):
+def main(self: Task, file: io.BytesIO | str = "xlsx"):
     # ----- Metadata -----#
     context: Context = self.request
     id = context.id
