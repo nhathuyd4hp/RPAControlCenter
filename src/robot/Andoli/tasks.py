@@ -11,11 +11,8 @@ from src.core.config import settings
 from src.service import StorageService as minio
 
 
-@shared_task(
-    bind=True,
-    name="Kizuku Noukikakunin",
-)
-def KizukuNoukikakunin(
+@shared_task(bind=True)
+def main(
     self: Task,
     file: io.BytesIO | str = "xlsx",
 ):
@@ -24,20 +21,21 @@ def KizukuNoukikakunin(
     id = context.id
     # ----- Download Asset -----#
     file_name = os.path.basename(file) if (file, str) else file.name
-    save_path: Path = Path(__file__).resolve().parents[2] / "robot" / "KizukuNoukikakunin" / file_name
+    save_path: Path = Path(__file__).resolve().parents[2] / "robot" / "Andoli" / file_name
     minio.fget_object(
         bucket_name=settings.TEMP_BUCKET,
         object_name=file,
         file_path=str(save_path),
     )
-    new_path = save_path.with_name("kizuku 納期確認.xlsx")
+    new_path = save_path.with_name("Andoli納期確認送付.xlsx")
     save_path.replace(new_path)
+
     # ----- Exe Path -----#
     log_dir = Path(__file__).resolve().parents[3] / "logs"
     log_dir.mkdir(parents=True, exist_ok=True)
     log_file = log_dir / f"{id}.log"
 
-    exe_path = Path(__file__).resolve().parents[2] / "robot" / "KizukuNoukikakunin" / "kizuku.py"
+    exe_path = Path(__file__).resolve().parents[2] / "robot" / "Andoli" / "AnDoli_v2_7.py"
 
     with open(log_file, "w", encoding="utf-8", errors="ignore") as f:
         process = subprocess.Popen(
@@ -55,7 +53,7 @@ def KizukuNoukikakunin(
 
     result = minio.fput_object(
         bucket_name=settings.RESULT_BUCKET,
-        object_name=f"KizukuNoukikakunin/{id}/kizuku.xlsx",
+        object_name=f"Andoli/{id}/Andoli.xlsx",
         file_path=str(new_path),
         content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     )

@@ -26,7 +26,7 @@ def main(self: Task, file: io.BytesIO | str = "xlsx"):
         file_path=str(save_path),
     )
     new_path = save_path.with_name("健新～ヤマダホームズの図面送付.xlsx")
-    save_path.rename(new_path)
+    save_path.replace(new_path)
 
     # ----- Exe Path -----#
     log_dir = Path(__file__).resolve().parents[3] / "logs"
