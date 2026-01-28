@@ -1,17 +1,20 @@
-import contextlib
 import os
 import shutil
 import subprocess
 from pathlib import Path
 
+import redis
 from celery import shared_task
 
 from src.core.config import settings
+from src.core.logger import Log
+from src.core.redis import REDIS_POOL
 from src.service import ResultService as minio
 
 
 @shared_task(bind=True, name="Osaka Mitsumori Soufu")
 def OsakaMitsumoriSoufu(self):
+    logger = Log.get_logger(channel=self.request.id, redis_client=redis.Redis(connection_pool=REDIS_POOL))
     exe_path = (
         Path(__file__).resolve().parents[2] / "robot" / "OsakaMitsumoriSoufu" / "「大阪・インド」見積書送付_V1.5.exe"
     )
@@ -51,8 +54,10 @@ def OsakaMitsumoriSoufu(self):
         file_path=str(latest_pdf),
         content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     )
-    with contextlib.suppress(Exception):
+    try:
         latest_pdf.unlink()
         shutil.rmtree(reports_folder)
+    except Exception as e:
+        logger.error(e)
 
     return f"{settings.RESULT_BUCKET}/{result.object_name}"
