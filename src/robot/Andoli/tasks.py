@@ -11,7 +11,7 @@ from src.core.config import settings
 from src.service import StorageService as minio
 
 
-@shared_task(bind=True)
+@shared_task(bind=True, name="Andoli")
 def main(
     self: Task,
     file: io.BytesIO | str = "xlsx",
