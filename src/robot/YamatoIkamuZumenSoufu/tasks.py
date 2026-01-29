@@ -5,6 +5,9 @@ from pathlib import Path
 from celery import shared_task
 from celery.app.task import Task
 
+from src.core.config import settings
+from src.service import StorageService as minio
+
 
 @shared_task(bind=True, name="Yamato Ikamu Zumen Soufu")
 def main(self: Task):
@@ -29,3 +32,14 @@ def main(self: Task):
             path.unlink(missing_ok=True)
         if path.is_dir():
             shutil.rmtree(path, ignore_errors=True)
+
+    result_path = exe_path.parent / "結果.xlsx"
+
+    result = minio.fput_object(
+        bucket_name=settings.RESULT_BUCKET,
+        object_name=f"YamatoIkamuZumenSoufu/{id}/result.xlsx",
+        file_path=str(result_path),
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    )
+
+    return f"{settings.RESULT_BUCKET}/{result.object_name}"

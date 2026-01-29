@@ -1,6 +1,7 @@
 import contextlib
 import io
 import os
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -28,8 +29,14 @@ def main(
         object_name=file,
         file_path=str(save_path),
     )
-    new_path = save_path.with_name("Andoli納期確認送付.xlsx")
-    save_path.replace(new_path)
+    base_dir = save_path.parent
+    files_dir = base_dir / "Files"
+    files_dir.mkdir(parents=True, exist_ok=True)
+
+    target_path = files_dir / "案件情報.xlsx"
+    target_path.unlink(missing_ok=True)
+
+    save_path.replace(target_path)
 
     # ----- Exe Path -----#
     log_dir = Path(__file__).resolve().parents[3] / "logs"
@@ -52,16 +59,19 @@ def main(
         )
         process.wait()
 
+    result_path = exe_path.parent / "Andoli納期確認送付.xlsx"
+
     result = minio.fput_object(
         bucket_name=settings.RESULT_BUCKET,
         object_name=f"Andoli/{id}/Andoli.xlsx",
-        file_path=str(new_path),
+        file_path=str(result_path),
         content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     )
 
     with contextlib.suppress(Exception):
-        new_path.unlink(missing_ok=True)
         Andoli_bot_log = exe_path.parent / "Andoli_bot_log.log"
+        Files = exe_path.parent / "Files"
         Andoli_bot_log.unlink(missing_ok=True)
+        shutil.rmtree(Files, ignore_errors=True)
 
     return f"{settings.RESULT_BUCKET}/{result.object_name}"
