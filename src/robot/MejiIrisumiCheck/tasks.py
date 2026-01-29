@@ -94,7 +94,6 @@ def MejiIrisumiCheck(
                 timeout=10000,
             )
             context = browser.new_context(no_viewport=True)
-            context.tracing.start(screenshots=True, snapshots=True, sources=True)
             with WebAccess(
                 domain="https://webaccess.nsk-cad.com/",
                 username="hanh0704",

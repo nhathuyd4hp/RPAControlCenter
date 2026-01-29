@@ -179,7 +179,6 @@ def tochigi(self, process_date: datetime | str):
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=False, args=["--start-maximized"])
         context = browser.new_context(no_viewport=True)
-        context.tracing.start(screenshots=True, snapshots=True, sources=True)
         with (
             SharePoint(
                 domain=settings.SHAREPOINT_DOMAIN,
