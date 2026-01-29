@@ -294,7 +294,7 @@ class APISharePoint:
             json_data = response.json()
             sheet, address = json_data.get("address").split("!")
             value = json_data.get("values", [[None]])[0][0]
-            self.logger.info(f"Write Sheet: {sheet} | Cell: {address} | Value: {value}")
+            self.logger.info(f"Write Sheet: {sheet} ; Cell: {address} ; Value: {value}")
         if response.status_code == 200:
             return True
         return self.write(site_id, drive_id, item_id, range, data, sheet)
