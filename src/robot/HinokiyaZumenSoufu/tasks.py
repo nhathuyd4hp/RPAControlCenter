@@ -1,3 +1,4 @@
+import shutil
 import subprocess
 from pathlib import Path
 
@@ -30,5 +31,14 @@ def main(self: Task):
         file_path=str(result_path),
         content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     )
-
+    for path in [
+        exe_path.parent / "Access_token",
+        exe_path.parent / "Ankens",
+        exe_path.parent / "Logs",
+        exe_path.parent / "Access_token_lo",
+    ]:
+        if path.is_file():
+            path.unlink(missing_ok=True)
+        if path.is_dir():
+            shutil.rmtree(path, ignore_errors=True)
     return f"{settings.RESULT_BUCKET}/{result.object_name}"
