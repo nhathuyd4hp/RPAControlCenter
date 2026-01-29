@@ -15,6 +15,7 @@ from celery import shared_task
 from filelock import FileLock
 from openpyxl.utils import get_column_letter
 from playwright.sync_api import sync_playwright
+from pywinauto.controls.hwndwrapper import InvalidWindowHandle
 
 from src.core.config import settings
 from src.core.logger import Log
@@ -69,6 +70,8 @@ def Fname(path: str):
 @shared_task(
     bind=True,
     name="Kyushu Osaka",
+    autoretry_for=(InvalidWindowHandle,),
+    retry_kwargs={"max_retries": None},
 )
 def kyushu_osaka(
     self,

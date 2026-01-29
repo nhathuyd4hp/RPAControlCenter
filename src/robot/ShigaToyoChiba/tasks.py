@@ -15,6 +15,7 @@ from celery.app.task import Task
 from filelock import FileLock
 from openpyxl.utils import get_column_letter
 from playwright.sync_api import sync_playwright
+from pywinauto.controls.hwndwrapper import InvalidWindowHandle
 
 from src.core.config import settings
 from src.core.logger import Log
@@ -66,7 +67,12 @@ def Fname(path: str):
             break
 
 
-@shared_task(bind=True, name="Shiga Toyo Chiba")
+@shared_task(
+    bind=True,
+    name="Shiga Toyo Chiba",
+    autoretry_for=(InvalidWindowHandle,),
+    retry_kwargs={"max_retries": None},
+)
 def shiga_toyo_chiba(
     self: Task,
     process_date: datetime | str,

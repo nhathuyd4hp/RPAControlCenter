@@ -18,6 +18,7 @@ from openpyxl.utils import get_column_letter
 from playwright.sync_api import sync_playwright
 from pywinauto import Desktop
 from pywinauto.application import Application, WindowSpecification
+from pywinauto.controls.hwndwrapper import InvalidWindowHandle
 
 from src.core.config import settings
 from src.core.logger import Log
@@ -156,7 +157,12 @@ def MicrosoftExcel():
             break
 
 
-@shared_task(bind=True, name="Tochigi")
+@shared_task(
+    bind=True,
+    name="Tochigi",
+    autoretry_for=(InvalidWindowHandle,),
+    retry_kwargs={"max_retries": None},
+)
 def tochigi(self, process_date: datetime | str):
     if isinstance(process_date, str):
         process_date = datetime.strptime(process_date, "%Y-%m-%d %H:%M:%S.%f").date()
