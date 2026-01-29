@@ -37,3 +37,4 @@ from src.robot.Andoli import tasks  # noqa
 from src.robot.AsahiZumenSoufu import tasks  # noqa
 from src.robot.MitsumoriSoufu import tasks  # noqa
 from src.robot.AsahiKenshinMitsumoriSoufu import tasks  # noqa
+from src.robot.HinokiyaZumenSoufu import tasks  # noqa
