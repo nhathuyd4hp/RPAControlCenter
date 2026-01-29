@@ -21,7 +21,7 @@ def main(
     context: Context = self.request
     id = context.id
     # ----- Download Asset -----#
-    file_name = os.path.basename(file) if (file, str) else file.name
+    file_name = os.path.basename(file) if isinstance(file, str) else file.name
     save_path: Path = Path(__file__).resolve().parents[2] / "robot" / "Andoli" / file_name
     minio.fget_object(
         bucket_name=settings.TEMP_BUCKET,
@@ -58,6 +58,7 @@ def main(
         file_path=str(new_path),
         content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     )
+
     with contextlib.suppress(Exception):
         new_path.unlink(missing_ok=True)
         Andoli_bot_log = exe_path.parent / "Andoli_bot_log.log"

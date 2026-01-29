@@ -23,7 +23,7 @@ def KizukuNoukikakunin(
     context: Context = self.request
     id = context.id
     # ----- Download Asset -----#
-    file_name = os.path.basename(file) if (file, str) else file.name
+    file_name = os.path.basename(file) if isinstance(file, str) else file.name
     save_path: Path = Path(__file__).resolve().parents[2] / "robot" / "KizukuNoukikakunin" / file_name
     minio.fget_object(
         bucket_name=settings.TEMP_BUCKET,

@@ -20,7 +20,7 @@ def main(self: Task, file: io.BytesIO | str = "xlsx"):
     context: Context = self.request
     id = context.id
     # ----- Download Asset -----#
-    file_name = os.path.basename(file) if (file, str) else file.name
+    file_name = os.path.basename(file) if isinstance(file, str) else file.name
     save_path: Path = Path(__file__).resolve().parents[2] / "robot" / "KenshinYamahaZumenSoufu" / file_name
 
     minio.fget_object(
