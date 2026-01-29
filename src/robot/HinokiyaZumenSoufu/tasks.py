@@ -12,7 +12,7 @@ from src.service import StorageService as minio
 @shared_task(bind=True, name="Hinokiya Zumen Soufu")
 def main(self: Task):
     id: str = self.request.id
-    exe_path = Path(__file__).resolve().parents[2] / "robot" / "HinokiyaZumenSoufu" / "ZumenSoufu_Henshin_V1.9.exe"
+    exe_path = Path(__file__).resolve().parents[2] / "robot" / "HinokiyaZumenSoufu" / "ZumenSoufu_Henshin_V2.0.exe"
     log_dir = Path(__file__).resolve().parents[3] / "logs"
     log_dir.mkdir(parents=True, exist_ok=True)
     log_file = log_dir / f"{id}.log"
