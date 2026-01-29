@@ -1,6 +1,9 @@
-from celery import Celery
+from src.core.playwright_patch import apply_patch
 
-from src.core.config import settings
+apply_patch()
+
+from celery import Celery  # noqa
+from src.core.config import settings  # noqa
 from src.robot import *  # noqa
 from src.worker_signals import *  # noqa
 
