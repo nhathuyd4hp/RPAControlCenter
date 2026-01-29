@@ -6,10 +6,10 @@ from celery import shared_task
 from celery.app.task import Task
 
 
-@shared_task(bind=True, name="Tamahome Noukihikaku")
+@shared_task(bind=True, name="Yamato Ikamu Zumen Soufu")
 def main(self: Task):
     id: str = self.request.id
-    exe_path = Path(__file__).resolve().parents[2] / "robot" / "TamahomeNoukihikaku" / "タマ納期比較_V2.0.exe"
+    exe_path = Path(__file__).resolve().parents[2] / "robot" / "YamatoIkamuZumenSoufu" / "yamato_iikamu_zumensoufu.exe"
     log_dir = Path(__file__).resolve().parents[3] / "logs"
     log_dir.mkdir(parents=True, exist_ok=True)
     log_file = log_dir / f"{id}.log"
