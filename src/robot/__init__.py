@@ -41,3 +41,4 @@ from src.robot.HinokiyaZumenSoufu import tasks  # noqa
 from src.robot.YamatoIkamuZumenSoufu import tasks  # noqa
 from src.robot.TamahomeNoukihikaku import tasks  # noqa
 from src.robot.YokoMitsumoriSoufu import tasks  # noqa
+from src.robot.YokoMitsumoriWaritsukezuSoufu import tasks  # noqa
