@@ -49,8 +49,8 @@ def _write_to_files_sync(grouped_logs: dict):
 
 
 async def log_collector(
-    batch_size: int = 100,
-    flush_interval: int = 5,
+    batch_size: int = 50,
+    flush_interval: int = 2.5,
 ):
     batch: list[dict] = []
     last_flush = time.monotonic()
@@ -140,7 +140,7 @@ async def lifespan(app: FastAPI):
                         minute=schedule.minute,
                         day_of_week=schedule.day_of_week,
                         start_date=schedule.start_date,
-                        end_date=schedule.end_date,
+                        day=schedule.day,
                     ),
                 )
     scheduler.start()

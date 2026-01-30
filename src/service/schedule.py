@@ -25,7 +25,7 @@ class ScheduleService:
                 minute=data.schedule.minute,
                 day_of_week=data.schedule.day_of_week,
                 start_date=data.schedule.start_date,
-                end_date=data.schedule.end_date,
+                day=data.schedule.day_of_month,
             )
             if isinstance(data, RunSchedule)
             else Schedule(**data)

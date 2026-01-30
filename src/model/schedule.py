@@ -11,5 +11,5 @@ class Schedule(Base, table=True):
     hour: int | None = Field(default=None)
     minute: int | None = Field(default=None)
     day_of_week: str | None = Field(default=None)
+    day: str | None = Field(default=None)
     start_date: datetime | None = Field(default=None)
-    end_date: datetime | None = Field(default=None)

@@ -13,10 +13,10 @@ class ScheduleInput(BaseModel):
     # Cron expression fields
     hour: int | None = None
     minute: int | None = None
+    day_of_month: str | None = None
     day_of_week: str | None = None
     # Schedule control
     start_date: Optional[datetime] = None
-    end_date: Optional[datetime] = None
 
 
 class RunSchedule(BaseModel):

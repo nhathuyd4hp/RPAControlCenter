@@ -1,3 +1,5 @@
+import re
+
 from apscheduler.job import Job
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
@@ -27,8 +29,8 @@ def get_schedules(scheduler: BackgroundScheduler = Depends(get_scheduler)):
             "parameters": job.kwargs,
             "next_run_time": job.next_run_time,
             "start_date": job.trigger.start_date,
-            "end_date": job.trigger.end_date,
-            "status": "ACTIVE" if job.next_run_time else "EXPIRED",
+            "day_of_week": re.search(r"day_of_week='([^']+)'", str(job.trigger)).group(1),
+            "day": re.search(r"day='([^']+)'", str(job.trigger)).group(1),
         }
         for job in jobs
     ]
@@ -57,8 +59,8 @@ def set_robot_schedule(
             hour=data.schedule.hour,
             minute=data.schedule.minute,
             day_of_week=data.schedule.day_of_week,
+            day=data.schedule.day_of_month,
             start_date=data.schedule.start_date,
-            end_date=data.schedule.end_date,
         ),
     )
     return SuccessResponse(
