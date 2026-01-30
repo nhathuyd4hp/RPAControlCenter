@@ -7,7 +7,7 @@ import threading
 import time
 import tkinter as tk
 from datetime import datetime
-from tkinter import CENTER, Label
+from tkinter import CENTER, Button, Label
 
 import customtkinter as ctk
 import pandas as pd
@@ -561,12 +561,14 @@ class App(tk.Tk):
         self.to_date_entry.place(relx=0.5, rely=0.5, anchor=CENTER)
         self.to_date_entry.set_date(self.to_date)
 
-        # self.start_button = Button(self, text="Start Bot", command=self.start_script, bg="#3290db", fg="white")
-        # self.start_button.place(relx=0.5, rely=0.6, anchor=CENTER)
+        self.start_button = Button(self, text="Start Bot", command=self.start_script, bg="#3290db", fg="white")
+        self.start_button.place(relx=0.5, rely=0.6, anchor=CENTER)
 
         self.after(5000, self.start_script)
 
     def start_script(self):
+        self.start_button.config(state="disabled", bg="#cccccc")  # Đổi màu xám cho dễ nhìn
+
         self.from_date = self.from_date_entry.get_date()
         self.to_date = self.to_date_entry.get_date()
 
