@@ -1,6 +1,7 @@
 import redis
 import xlwings as xw
 from celery import shared_task
+from celery.app.task import Task
 from playwright.sync_api import sync_playwright
 
 from src.core.config import settings
@@ -15,7 +16,7 @@ def get_excel_path():
 
 
 @shared_task(bind=True, name="Shuko Tạo Số")
-def Shuko(self):
+def Shuko(self: Task):
     logger = Log.get_logger(channel=self.request.id, redis_client=redis.Redis(connection_pool=REDIS_POOL))
     with sync_playwright() as p:
         browser = p.chromium.launch(
@@ -67,7 +68,7 @@ def Shuko(self):
             mails = mails[mails[" ラベル "] == ""]
             i: int = 2
             for _, row in mails.iterrows():
-                logger.info(f"{row[" 件名 "]}[{row[" ID "]}]")
+                logger.info(f"Process: {row[" 件名 "]}[{row[" ID "]}]")
                 success, fMatterID, orders_name, save_path, address = md.generate(row[" ID "])
                 if success:
                     logger.info(f"{row[" ID "]} - {fMatterID} - 秀光ビルド - {orders_name} - {address}")
@@ -88,12 +89,10 @@ def Shuko(self):
             wb.close()
             app.quit()
 
-    object_name = f"ShukoTaoSo/{self.request.id}/{self.request.id}.xlsm"
-
     result = minio.fput_object(
         bucket_name=settings.RESULT_BUCKET,
         file_path=get_excel_path(),
-        object_name=object_name,
+        object_name=f"ShukoTaoSo/{self.request.id}/{self.request.id}.xlsm",
         content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     )
 

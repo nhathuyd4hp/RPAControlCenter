@@ -115,7 +115,7 @@ class MailDealer:
         except TimeoutError:
             return self.mail_lists(mailbox)
 
-    def generate(self, mail_id: str) -> tuple[str, str, str]:
+    def generate(self, mail_id: str) -> tuple[str, str, str, str, str]:
         try:
             self.page.bring_to_front()
             self.page.locator("input[name='fDQuery[B]']").clear()
