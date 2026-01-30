@@ -8,7 +8,14 @@ from src.core.config import settings
 from src.service import StorageService as minio
 
 
-@shared_task(bind=True, name="Asahi Kenshin Mitsumori Soufu")
+class InactiveTask(Task):
+    active = False
+
+    def __call__(self):
+        raise RuntimeError("Inactive task")
+
+
+@shared_task(bind=True, name="Asahi Kenshin Mitsumori Soufu", base=InactiveTask)
 def main(self: Task):
     id: str = self.request.id
     exe_path = (
