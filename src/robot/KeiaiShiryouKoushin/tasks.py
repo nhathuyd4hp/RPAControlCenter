@@ -1,3 +1,4 @@
+import shutil
 import subprocess
 import sys
 from datetime import datetime
@@ -50,4 +51,11 @@ def keiai_shiryou_koushin(
         file_path=str(result_file),
         content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     )
+    for path in [cwd_path / "Ankens", cwd_path / "logs"]:
+        shutil.rmtree(path, ignore_errors=True)
+
+    for xlsx in cwd_path.glob("*.xlsx"):
+        if xlsx.name != result_file.name:
+            xlsx.unlink(missing_ok=True)
+
     return f"{settings.RESULT_BUCKET}/{result.object_name}"
