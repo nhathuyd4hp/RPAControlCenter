@@ -29,8 +29,8 @@ def get_schedules(scheduler: BackgroundScheduler = Depends(get_scheduler)):
             "parameters": job.kwargs,
             "next_run_time": job.next_run_time,
             "start_date": job.trigger.start_date,
-            "day_of_week": re.search(r"day_of_week='([^']+)'", str(job.trigger)).group(1),
-            "day": re.search(r"day='([^']+)'", str(job.trigger)).group(1),
+            "day_of_week": (m := re.search(r"day_of_week='([^']+)'", str(job.trigger))) and m.group(1),
+            "day": (m := re.search(r"day='([^']+)'", str(job.trigger))) and m.group(1),
         }
         for job in jobs
     ]
