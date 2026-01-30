@@ -26,8 +26,9 @@ from selenium.webdriver.support.ui import WebDriverWait
 from tkcalendar import DateEntry
 from upload import fileUpload_graph_api
 
+os.environ["PYTHONUNBUFFERED"] = "1"
+sys.stdout.reconfigure(line_buffering=True)
 sys.stdout.reconfigure(encoding="utf-8")
-sys.stderr.reconfigure(encoding="utf-8")
 
 
 class Kistarkoushin:
@@ -57,6 +58,7 @@ class Kistarkoushin:
             level=logging.INFO,
             format="%(asctime)s - %(levelname)s - %(message)s",
             handlers=[logging.StreamHandler(sys.stdout)],
+            force=True,
         )
 
     def format_date(self, date):
